@@ -1,7 +1,8 @@
 import type { AdminProductSaveRequest, AdminStoreSaveRequest, CheckoutRequest, Env } from "./types";
 import { login, requireAdmin } from "./auth";
+import { loadPublicCatalog } from "./catalog";
 import { createCheckout, getPublicOrder, handlePayOSWebhook, listAdminOrders, updateAdminOrder, adminSummary } from "./orders";
-import { readMainCatalog, saveProduct, saveStore } from "./github";
+import { saveProduct, saveStore } from "./github";
 import { corsHeaders, errorResponse, json, readJson, withCors } from "./http";
 
 function isAdminPath(pathname: string): boolean {
@@ -50,7 +51,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   }
 
   if (request.method === "GET" && pathname === "/api/v1/admin/catalog") {
-    return json(await readMainCatalog(env));
+    return json(await loadPublicCatalog(env));
   }
 
   if (request.method === "POST" && pathname === "/api/v1/admin/products/save") {

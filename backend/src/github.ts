@@ -223,18 +223,6 @@ function assertStore(store: StoreConfig): void {
   }
 }
 
-export async function readMainCatalog(env: Env): Promise<{ store: StoreConfig; products: Product[] }> {
-  const [storeFile, productsFile] = await Promise.all([
-    readTextFile(env, STORE_PATH, env.GITHUB_MAIN_BRANCH),
-    readTextFile(env, PRODUCTS_PATH, env.GITHUB_MAIN_BRANCH)
-  ]);
-
-  return {
-    store: JSON.parse(storeFile.text) as StoreConfig,
-    products: JSON.parse(productsFile.text) as Product[]
-  };
-}
-
 export async function saveProduct(
   env: Env,
   input: AdminProductSaveRequest
