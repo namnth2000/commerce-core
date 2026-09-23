@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>commerce-core Admin</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">commerce-core</a>
+    <span class="mode">Admin prototype v0.1</span>
+  </header>
+
+  <main class="shell">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <div>
+          <h1>Sản phẩm</h1>
+          <p>Catalog demo lưu trên trình duyệt</p>
+        </div>
+        <button class="icon-button" id="newProductButton" type="button" aria-label="Thêm sản phẩm">+</button>
+      </div>
+      <div id="productList" class="product-list"></div>
+    </aside>
+
+    <section class="editor">
+      <div class="editor-head">
+        <div>
+          <h2 id="editorTitle">Chỉnh sản phẩm</h2>
+          <p id="editorHint">Thay đổi dữ liệu rồi lưu bản nháp</p>
+        </div>
+        <span class="status-chip" id="saveState">Chưa thay đổi</span>
+      </div>
+
+      <form id="productForm">
+        <div class="field-row">
+          <label class="field">
+            <span>Tên sản phẩm</span>
+            <input id="nameInput" name="name" required>
+          </label>
+          <label class="field">
+            <span>Slug</span>
+            <input id="slugInput" name="slug" required pattern="[a-z0-9-]+">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Giá</span>
+          <div class="money-input">
+            <input id="priceInput" name="price" type="number" min="0" step="1000" required>
+            <span>VND</span>
+          </div>
+        </label>
+
+        <label class="field">
+          <span>Mô tả</span>
+          <textarea id="descriptionInput" name="description" rows="5"></textarea>
+        </label>
+
+        <label class="check-row">
+          <input id="activeInput" name="active" type="checkbox">
+          <span>Đang bán</span>
+        </label>
+
+        <section class="image-section">
+          <div class="section-copy">
+            <h3>Ảnh sản phẩm</h3>
+            <p>Ảnh được resize tối đa 1600px và chuyển sang WebP trước khi chuẩn bị publish</p>
+          </div>
+
+          <label class="upload-zone" for="imageInput">
+            <input id="imageInput" type="file" accept="image/*">
+            <strong>Chọn ảnh</strong>
+            <span>JPG, PNG hoặc WebP</span>
+          </label>
+
+          <div class="image-result" id="imageResult" hidden>
+            <img id="imagePreview" alt="Ảnh sản phẩm sau khi tối ưu">
+            <div class="image-meta">
+              <div>
+                <span>Trước</span>
+                <strong id="originalSize">-</strong>
+              </div>
+              <div>
+                <span>Sau</span>
+                <strong id="optimizedSize">-</strong>
+              </div>
+              <div>
+                <span>Kích thước</span>
+                <strong id="optimizedDimensions">-</strong>
+              </div>
+            </div>
+            <button class="secondary-button" id="downloadImageButton" type="button">Tải ảnh đã tối ưu</button>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button class="secondary-button" id="exportButton" type="button">Xuất JSON</button>
+          <div class="actions-right">
+            <button class="secondary-button" id="saveDraftButton" type="submit">Lưu bản nháp</button>
+            <button class="primary-button" id="publishButton" type="button">Publish</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="notice" id="notice" role="status" aria-live="polite">
+        v0.1 chưa kết nối GitHub. Lưu bản nháp dùng localStorage, Publish sẽ xuất file JSON để bạn kiểm tra contract.
+      </div>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

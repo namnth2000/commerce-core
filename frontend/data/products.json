@@ -1,0 +1,74 @@
+[
+  {
+    "schemaVersion": "0.1",
+    "id": "pixel-clock-mini",
+    "slug": "pixel-clock-mini",
+    "name": "Pixel Clock Mini",
+    "description": "Đồng hồ pixel nhỏ gọn, đủ sáng để nhìn giờ nhưng không chiếm sự chú ý.",
+    "price": 489000,
+    "compareAtPrice": null,
+    "images": ["./assets/pixel-clock.svg"],
+    "tags": ["desk", "decor"],
+    "active": true
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "magnetic-cable-dock",
+    "slug": "magnetic-cable-dock",
+    "name": "Magnetic Cable Dock",
+    "description": "Giữ dây sạc đúng chỗ bằng nam châm, lấy ra bằng một tay khi cần.",
+    "price": 179000,
+    "compareAtPrice": null,
+    "images": ["./assets/cable-dock.svg"],
+    "tags": ["desk", "utility"],
+    "active": true
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "ambient-light-bar",
+    "slug": "ambient-light-bar",
+    "name": "Ambient Light Bar",
+    "description": "Thanh sáng nhỏ đặt sau màn hình để góc làm việc dịu hơn vào buổi tối.",
+    "price": 699000,
+    "compareAtPrice": null,
+    "images": ["./assets/light-bar.svg"],
+    "tags": ["light", "decor"],
+    "active": true
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "switch-fidget-pad",
+    "slug": "switch-fidget-pad",
+    "name": "Switch Fidget Pad",
+    "description": "Bốn switch cơ để bấm khi đang nghĩ, họp hoặc chờ build chạy xong.",
+    "price": 259000,
+    "compareAtPrice": null,
+    "images": ["./assets/switch-pad.svg"],
+    "tags": ["toy", "desk"],
+    "active": true
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "aluminum-headphone-stand",
+    "slug": "aluminum-headphone-stand",
+    "name": "Aluminum Headphone Stand",
+    "description": "Giá treo tai nghe bằng nhôm, footprint nhỏ và giữ mặt bàn thoáng hơn.",
+    "price": 399000,
+    "compareAtPrice": null,
+    "images": ["./assets/headphone-stand.svg"],
+    "tags": ["desk", "utility"],
+    "active": true
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "mini-desk-vacuum",
+    "slug": "mini-desk-vacuum",
+    "name": "Mini Desk Vacuum",
+    "description": "Máy hút bụi mini cho vụn bánh, bụi bàn phím và những thứ nhỏ khó chịu.",
+    "price": 329000,
+    "compareAtPrice": null,
+    "images": ["./assets/desk-vacuum.svg"],
+    "tags": ["utility", "toy"],
+    "active": true
+  }
+]
