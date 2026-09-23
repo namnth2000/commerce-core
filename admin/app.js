@@ -1,44 +1,32 @@
-const STORAGE_KEY = "commerce-core-admin-v0.1";
-
-const defaults = [
-  {
-    schemaVersion: "0.1",
-    id: "pixel-clock-mini",
-    slug: "pixel-clock-mini",
-    name: "Pixel Clock Mini",
-    description: "Đồng hồ pixel nhỏ gọn để bàn, hiển thị giờ và tạo điểm nhấn cho góc làm việc.",
-    price: 489000,
-    compareAtPrice: null,
-    images: ["/products/pixel-clock-mini.webp"],
-    tags: ["desk", "decor"],
-    active: true
-  },
-  {
-    schemaVersion: "0.1",
-    id: "magnetic-cable-dock",
-    slug: "magnetic-cable-dock",
-    name: "Magnetic Cable Dock",
-    description: "Bộ giữ dây sạc nam châm giúp mặt bàn gọn hơn nhưng vẫn lấy dây bằng một tay.",
-    price: 179000,
-    compareAtPrice: null,
-    images: ["/products/magnetic-cable-dock.webp"],
-    tags: ["desk", "utility"],
-    active: true
-  }
-];
+const config = window.COMMERCE_ADMIN_CONFIG || {};
+const API_BASE = String(config.apiBase || "http://localhost:8787").replace(/\/$/, "");
+const SESSION_KEY = "commerce-core-admin-session-v1";
 
 const state = {
-  products: loadProducts(),
+  token: sessionStorage.getItem(SESSION_KEY),
+  store: null,
+  products: [],
+  orders: [],
   selectedId: null,
   optimizedImage: null
 };
 
 const el = {
-  list: document.querySelector("#productList"),
-  form: document.querySelector("#productForm"),
+  tabs: [...document.querySelectorAll(".tab")],
+  views: {
+    products: document.querySelector("#productsView"),
+    orders: document.querySelector("#ordersView"),
+    settings: document.querySelector("#settingsView")
+  },
+  logout: document.querySelector("#logoutButton"),
+  loginDialog: document.querySelector("#loginDialog"),
+  loginForm: document.querySelector("#loginForm"),
+  password: document.querySelector("#passwordInput"),
+  loginError: document.querySelector("#loginError"),
+  productList: document.querySelector("#productList"),
+  newProduct: document.querySelector("#newProductButton"),
   editorTitle: document.querySelector("#editorTitle"),
   saveState: document.querySelector("#saveState"),
-  notice: document.querySelector("#notice"),
   name: document.querySelector("#nameInput"),
   slug: document.querySelector("#slugInput"),
   price: document.querySelector("#priceInput"),
@@ -50,142 +38,241 @@ const el = {
   originalSize: document.querySelector("#originalSize"),
   optimizedSize: document.querySelector("#optimizedSize"),
   optimizedDimensions: document.querySelector("#optimizedDimensions"),
-  newProduct: document.querySelector("#newProductButton"),
-  exportButton: document.querySelector("#exportButton"),
-  publishButton: document.querySelector("#publishButton"),
-  downloadImageButton: document.querySelector("#downloadImageButton")
+  saveDraft: document.querySelector("#saveDraftButton"),
+  preview: document.querySelector("#previewButton"),
+  publish: document.querySelector("#publishButton"),
+  productNotice: document.querySelector("#productNotice"),
+  ordersBody: document.querySelector("#ordersBody"),
+  refreshOrders: document.querySelector("#refreshOrdersButton"),
+  exportOrders: document.querySelector("#exportOrdersButton"),
+  ordersMetric: document.querySelector("#ordersMetric"),
+  revenueMetric: document.querySelector("#revenueMetric"),
+  openOrdersMetric: document.querySelector("#openOrdersMetric"),
+  ordersNotice: document.querySelector("#ordersNotice"),
+  settingsState: document.querySelector("#settingsState"),
+  storeName: document.querySelector("#storeNameInput"),
+  storeTagline: document.querySelector("#storeTaglineInput"),
+  storePhone: document.querySelector("#storePhoneInput"),
+  storeEmail: document.querySelector("#storeEmailInput"),
+  storeAddress: document.querySelector("#storeAddressInput"),
+  cod: document.querySelector("#paymentCodInput"),
+  bank: document.querySelector("#paymentBankInput"),
+  payos: document.querySelector("#paymentPayosInput"),
+  bankName: document.querySelector("#bankNameInput"),
+  bankAccountName: document.querySelector("#bankAccountNameInput"),
+  bankAccountNumber: document.querySelector("#bankAccountNumberInput"),
+  bankPrefix: document.querySelector("#bankPrefixInput"),
+  shippingName: document.querySelector("#shippingNameInput"),
+  shippingFee: document.querySelector("#shippingFeeInput"),
+  saveSettingsDraft: document.querySelector("#saveSettingsDraftButton"),
+  publishSettings: document.querySelector("#publishSettingsButton"),
+  settingsNotice: document.querySelector("#settingsNotice")
 };
 
-function loadProducts() {
+async function api(path, options = {}, authenticated = true) {
+  const headers = new Headers(options.headers || {});
+  if (options.body && !headers.has("content-type")) headers.set("content-type", "application/json");
+  if (authenticated && state.token) headers.set("authorization", "Bearer " + state.token);
+
+  const response = await fetch(API_BASE + path, { ...options, headers });
+  const contentType = response.headers.get("content-type") || "";
+  const body = contentType.includes("application/json") ? await response.json() : null;
+
+  if (response.status === 401 && authenticated) {
+    state.token = null;
+    sessionStorage.removeItem(SESSION_KEY);
+    showLogin();
+  }
+
+  if (!response.ok) {
+    throw new Error(body?.error?.message || "Request failed (" + response.status + ").");
+  }
+
+  return body;
+}
+
+function showLogin() {
+  el.loginError.textContent = "";
+  if (!el.loginDialog.open) el.loginDialog.showModal();
+  setTimeout(() => el.password.focus(), 0);
+}
+
+async function login(event) {
+  event.preventDefault();
+  el.loginError.textContent = "";
+
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : structuredClone(defaults);
-  } catch {
-    return structuredClone(defaults);
+    const result = await api("/api/v1/admin/session", {
+      method: "POST",
+      body: JSON.stringify({ password: el.password.value })
+    }, false);
+
+    state.token = result.token;
+    sessionStorage.setItem(SESSION_KEY, result.token);
+    el.password.value = "";
+    el.loginDialog.close();
+    await loadCatalog();
+  } catch (error) {
+    el.loginError.textContent = error.message;
   }
 }
 
-function money(value) {
-  return new Intl.NumberFormat("vi-VN").format(value) + "đ";
+function logout() {
+  state.token = null;
+  sessionStorage.removeItem(SESSION_KEY);
+  showLogin();
 }
 
-function slugify(value) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/đ/g, "d")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+async function loadCatalog() {
+  const result = await api("/api/v1/admin/catalog");
+  state.store = result.store;
+  state.products = result.products;
+  state.selectedId = state.products[0]?.id || null;
+  renderProductList();
+  fillProduct();
+  fillSettings();
+}
+
+function switchView(name) {
+  el.tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.view === name));
+  Object.entries(el.views).forEach(([key, view]) => view.classList.toggle("is-active", key === name));
+
+  if (name === "orders") loadOrders().catch((error) => showNotice(el.ordersNotice, error.message));
 }
 
 function currentProduct() {
   return state.products.find((product) => product.id === state.selectedId);
 }
 
-function renderList() {
-  el.list.innerHTML = "";
+function renderProductList() {
+  el.productList.innerHTML = "";
 
-  state.products.forEach((product) => {
+  for (const product of state.products) {
     const button = document.createElement("button");
-    button.className = "product-item";
     button.type = "button";
+    button.className = "product-item";
     button.setAttribute("aria-current", String(product.id === state.selectedId));
     button.innerHTML = `<strong>${escapeHtml(product.name)}</strong><span>${money(product.price)} · ${product.active ? "Đang bán" : "Ẩn"}</span>`;
-    button.addEventListener("click", () => selectProduct(product.id));
-    el.list.appendChild(button);
-  });
+    button.addEventListener("click", () => {
+      state.selectedId = product.id;
+      state.optimizedImage = null;
+      el.imageResult.hidden = true;
+      fillProduct();
+      renderProductList();
+    });
+    el.productList.appendChild(button);
+  }
 }
 
-function selectProduct(id) {
-  state.selectedId = id;
-  state.optimizedImage = null;
-  el.imageResult.hidden = true;
-
+function fillProduct() {
   const product = currentProduct();
   if (!product) return;
 
   el.name.value = product.name;
   el.slug.value = product.slug;
   el.price.value = product.price;
-  el.description.value = product.description;
-  el.active.checked = product.active;
+  el.description.value = product.description || "";
+  el.active.checked = Boolean(product.active);
   el.editorTitle.textContent = product.name;
-  setSaveState("Chưa thay đổi");
-  renderList();
+  el.saveState.textContent = "Sẵn sàng";
 }
 
 function newProduct() {
-  const id = "san-pham-moi-" + Date.now();
-  state.products.unshift({
-    schemaVersion: "0.1",
-    id,
-    slug: id,
+  const tempId = "new-" + Date.now();
+  const product = {
+    schemaVersion: "1",
+    id: tempId,
+    slug: "",
     name: "Sản phẩm mới",
     description: "",
     price: 0,
     compareAtPrice: null,
     images: [],
     tags: [],
-    active: false
-  });
-  selectProduct(id);
+    active: false,
+    _new: true
+  };
+
+  state.products.unshift(product);
+  state.selectedId = tempId;
+  state.optimizedImage = null;
+  renderProductList();
+  fillProduct();
   el.name.focus();
 }
 
-function readForm() {
-  const product = currentProduct();
-  if (!product) return null;
+function readProduct() {
+  const current = currentProduct();
+  if (!current) throw new Error("Chưa chọn sản phẩm.");
 
-  const nextSlug = el.slug.value.trim();
+  const slug = el.slug.value.trim();
+  if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+    throw new Error("Slug chỉ được dùng chữ thường, số và dấu gạch nối.");
+  }
+
+  const id = current._new ? slug : current.id;
+  const filename = slug + "-01.webp";
+  const images = state.optimizedImage ? ["./assets/products/" + filename] : current.images;
+
   return {
-    ...product,
-    id: product.id.startsWith("san-pham-moi-") ? nextSlug : product.id,
-    slug: nextSlug,
-    name: el.name.value.trim(),
-    description: el.description.value.trim(),
-    price: Math.max(0, Number(el.price.value) || 0),
-    active: el.active.checked,
-    images: state.optimizedImage
-      ? [`/products/${nextSlug}-01.webp`]
-      : product.images
+    product: {
+      schemaVersion: "1",
+      id,
+      slug,
+      name: el.name.value.trim(),
+      description: el.description.value.trim(),
+      price: Math.max(0, Number(el.price.value) || 0),
+      compareAtPrice: current.compareAtPrice ?? null,
+      images,
+      tags: current.tags || [],
+      active: el.active.checked
+    },
+    image: state.optimizedImage ? { filename, contentBase64: state.optimizedImage.base64 } : null
   };
 }
 
-function saveDraft(event) {
-  event.preventDefault();
+async function saveProduct(mode, openPreview = false) {
+  const { product, image } = readProduct();
 
-  const next = readForm();
-  if (!next || !next.name || !next.slug) return;
-
-  if (state.products.some((product) => product.id !== state.selectedId && product.slug === next.slug)) {
-    showNotice("Slug đã được dùng bởi sản phẩm khác.");
-    return;
+  if (!product.name) throw new Error("Tên sản phẩm không được để trống.");
+  if (state.products.some((item) => item.id !== state.selectedId && item.slug === product.slug)) {
+    throw new Error("Slug đã được dùng bởi sản phẩm khác.");
   }
 
-  const index = state.products.findIndex((product) => product.id === state.selectedId);
-  state.products[index] = next;
-  state.selectedId = next.id;
+  setProductBusy(true);
+  showNotice(el.productNotice, mode === "publish" ? "Đang publish..." : "Đang lưu bản nháp...");
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.products));
-  el.editorTitle.textContent = next.name;
-  setSaveState("Đã lưu local");
-  renderList();
+  try {
+    const result = await api("/api/v1/admin/products/save", {
+      method: "POST",
+      body: JSON.stringify({ mode, product, image })
+    });
 
-  showNotice(`Đã lưu bản nháp local. Khi Git adapter được kết nối, hành động này có thể map sang draft/${next.slug}.`);
+    const index = state.products.findIndex((item) => item.id === state.selectedId);
+    state.products[index] = product;
+    state.selectedId = product.id;
+    state.optimizedImage = null;
+    el.imageResult.hidden = true;
+    renderProductList();
+    fillProduct();
+
+    if (mode === "draft") {
+      const link = result.previewUrl
+        ? ` <a href="${escapeAttribute(result.previewUrl)}" target="_blank" rel="noreferrer">Mở preview</a>`
+        : "";
+      el.productNotice.innerHTML = "Đã lưu draft." + link;
+      if (openPreview && result.previewUrl) window.open(result.previewUrl, "_blank", "noopener");
+    } else {
+      showNotice(el.productNotice, "Đã publish lên production branch. Cloudflare Pages sẽ deploy commit mới.");
+    }
+  } finally {
+    setProductBusy(false);
+  }
 }
 
-function exportCurrent() {
-  const product = readForm();
-  if (!product) return;
-  downloadJson(product, `${product.slug || "product"}.json`);
-}
-
-function publishCurrent() {
-  const product = readForm();
-  if (!product) return;
-  downloadJson(product, `${product.slug || "product"}.json`);
-  showNotice("v0.1 chưa kết nối GitHub. File JSON đã được xuất thay cho thao tác Publish để bạn kiểm tra contract.");
+function setProductBusy(busy) {
+  [el.saveDraft, el.preview, el.publish].forEach((button) => button.disabled = busy);
+  el.saveState.textContent = busy ? "Đang xử lý" : "Sẵn sàng";
 }
 
 async function optimizeImage(file) {
@@ -205,47 +292,218 @@ async function optimizeImage(file) {
   context.drawImage(bitmap, 0, 0, width, height);
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.82));
-  if (!blob) throw new Error("Không thể tạo ảnh WebP.");
+  if (!blob) throw new Error("Không thể tạo WebP.");
+  if (blob.size > 1_500_000) throw new Error("Ảnh sau tối ưu vẫn lớn hơn 1.5 MB.");
 
-  const url = URL.createObjectURL(blob);
-  state.optimizedImage = { blob, url, width, height };
+  const base64 = await blobToBase64(blob);
+  state.optimizedImage = { blob, base64, width, height };
 
-  el.imagePreview.src = url;
+  el.imagePreview.src = URL.createObjectURL(blob);
   el.originalSize.textContent = formatBytes(file.size);
   el.optimizedSize.textContent = formatBytes(blob.size);
-  el.optimizedDimensions.textContent = `${width} × ${height}`;
+  el.optimizedDimensions.textContent = width + " × " + height;
   el.imageResult.hidden = false;
-
-  showNotice(blob.size < file.size
-    ? "Ảnh đã được resize và nén trước khi chuẩn bị publish."
-    : "Ảnh đã được chuẩn hoá sang WebP. File gốc vốn đã khá nhỏ nên dung lượng không giảm nhiều.");
+  showNotice(el.productNotice, "Ảnh đã được tối ưu. Ảnh gốc không được gửi lên Git.");
 }
 
-function downloadOptimizedImage() {
-  if (!state.optimizedImage) return;
-  const slug = el.slug.value.trim() || "product";
-  const link = document.createElement("a");
-  link.href = state.optimizedImage.url;
-  link.download = `${slug}-01.webp`;
-  link.click();
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }
 
-function downloadJson(data, filename) {
-  const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
+function fillSettings() {
+  if (!state.store) return;
+  const store = state.store;
+  const methods = new Set(store.checkout.paymentMethods || []);
+  const bank = store.checkout.bankTransfer || {};
+  const shipping = store.checkout.shippingMethods?.[0] || { id: "standard", name: "Giao hàng tiêu chuẩn", fee: 0 };
+
+  el.storeName.value = store.name || "";
+  el.storeTagline.value = store.tagline || "";
+  el.storePhone.value = store.contact?.phone || "";
+  el.storeEmail.value = store.contact?.email || "";
+  el.storeAddress.value = store.contact?.address || "";
+  el.cod.checked = methods.has("cod");
+  el.bank.checked = methods.has("bank_transfer");
+  el.payos.checked = methods.has("payos");
+  el.bankName.value = bank.bankName || "";
+  el.bankAccountName.value = bank.accountName || "";
+  el.bankAccountNumber.value = bank.accountNumber || "";
+  el.bankPrefix.value = bank.transferNotePrefix || "DON";
+  el.shippingName.value = shipping.name;
+  el.shippingFee.value = shipping.fee;
+}
+
+function readStore() {
+  const paymentMethods = [];
+  if (el.cod.checked) paymentMethods.push("cod");
+  if (el.bank.checked) paymentMethods.push("bank_transfer");
+  if (el.payos.checked) paymentMethods.push("payos");
+  if (!paymentMethods.length) throw new Error("Cần bật ít nhất một phương thức thanh toán.");
+
+  const bankTransfer = el.bank.checked ? {
+    bankName: el.bankName.value.trim(),
+    accountName: el.bankAccountName.value.trim(),
+    accountNumber: el.bankAccountNumber.value.trim(),
+    transferNotePrefix: el.bankPrefix.value.trim() || "DON"
+  } : null;
+
+  if (el.bank.checked && (!bankTransfer.bankName || !bankTransfer.accountName || !bankTransfer.accountNumber)) {
+    throw new Error("Điền đủ thông tin chuyển khoản.");
+  }
+
+  return {
+    ...state.store,
+    schemaVersion: "1",
+    name: el.storeName.value.trim(),
+    tagline: el.storeTagline.value.trim(),
+    contact: {
+      phone: el.storePhone.value.trim(),
+      email: el.storeEmail.value.trim() || null,
+      address: el.storeAddress.value.trim() || null
+    },
+    checkout: {
+      paymentMethods,
+      shippingMethods: [{
+        id: state.store.checkout.shippingMethods?.[0]?.id || "standard",
+        name: el.shippingName.value.trim(),
+        fee: Math.max(0, Number(el.shippingFee.value) || 0)
+      }],
+      bankTransfer
+    }
+  };
+}
+
+async function saveSettings(mode) {
+  const store = readStore();
+  el.settingsState.textContent = "Đang xử lý";
+  [el.saveSettingsDraft, el.publishSettings].forEach((button) => button.disabled = true);
+
+  try {
+    const result = await api("/api/v1/admin/store/save", {
+      method: "POST",
+      body: JSON.stringify({ mode, store })
+    });
+
+    state.store = store;
+    if (mode === "draft" && result.previewUrl) {
+      el.settingsNotice.innerHTML = `Đã lưu draft. <a href="${escapeAttribute(result.previewUrl)}" target="_blank" rel="noreferrer">Mở preview</a>`;
+    } else {
+      showNotice(el.settingsNotice, "Đã publish cài đặt cửa hàng.");
+    }
+  } finally {
+    [el.saveSettingsDraft, el.publishSettings].forEach((button) => button.disabled = false);
+    el.settingsState.textContent = "Sẵn sàng";
+  }
+}
+
+async function loadOrders() {
+  showNotice(el.ordersNotice, "Đang tải...");
+  const [ordersResult, summary] = await Promise.all([
+    api("/api/v1/admin/orders"),
+    api("/api/v1/admin/summary")
+  ]);
+
+  state.orders = ordersResult.orders || [];
+  el.ordersMetric.textContent = summary.orders;
+  el.revenueMetric.textContent = money(summary.paidRevenue);
+  el.openOrdersMetric.textContent = summary.openOrders;
+  renderOrders();
+  showNotice(el.ordersNotice, state.orders.length ? "" : "Chưa có đơn hàng.");
+}
+
+function renderOrders() {
+  el.ordersBody.innerHTML = "";
+
+  for (const order of state.orders) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><strong>${escapeHtml(order.id)}</strong><small>${escapeHtml(paymentMethodLabel(order.payment_method))}</small></td>
+      <td><strong>${escapeHtml(order.customer_name)}</strong><small>${escapeHtml(order.customer_phone)}</small></td>
+      <td>${money(order.total)}</td>
+      <td>${paymentSelect(order)}</td>
+      <td>${fulfillmentSelect(order)}</td>
+      <td>${formatDate(order.created_at)}</td>
+    `;
+
+    const payment = row.querySelector('[data-role="payment"]');
+    const fulfillment = row.querySelector('[data-role="fulfillment"]');
+    payment.addEventListener("change", () => updateOrder(order.id, { paymentStatus: payment.value }));
+    fulfillment.addEventListener("change", () => updateOrder(order.id, { fulfillmentStatus: fulfillment.value }));
+    el.ordersBody.appendChild(row);
+  }
+}
+
+async function updateOrder(id, patch) {
+  try {
+    await api("/api/v1/admin/orders/" + encodeURIComponent(id), {
+      method: "PATCH",
+      body: JSON.stringify(patch)
+    });
+    showNotice(el.ordersNotice, "Đã cập nhật " + id + ".");
+    await loadOrders();
+  } catch (error) {
+    showNotice(el.ordersNotice, error.message);
+  }
+}
+
+function paymentSelect(order) {
+  const options = [["unpaid", "Chưa thanh toán"], ["paid", "Đã thanh toán"], ["failed", "Lỗi"], ["refunded", "Đã hoàn tiền"]];
+  return `<select data-role="payment">${options.map(([value, label]) =>
+    `<option value="${value}" ${order.payment_status === value ? "selected" : ""}>${label}</option>`
+  ).join("")}</select>`;
+}
+
+function fulfillmentSelect(order) {
+  const options = [["new", "Mới"], ["preparing", "Đang chuẩn bị"], ["shipping", "Đang giao"], ["completed", "Hoàn thành"], ["cancelled", "Đã huỷ"]];
+  return `<select data-role="fulfillment">${options.map(([value, label]) =>
+    `<option value="${value}" ${order.fulfillment_status === value ? "selected" : ""}>${label}</option>`
+  ).join("")}</select>`;
+}
+
+function exportOrdersCsv() {
+  if (!state.orders.length) return;
+  const rows = [
+    ["order_id", "customer_name", "phone", "total", "currency", "payment_method", "payment_status", "fulfillment_status", "created_at"],
+    ...state.orders.map((order) => [order.id, order.customer_name, order.customer_phone, order.total, order.currency, order.payment_method, order.payment_status, order.fulfillment_status, order.created_at])
+  ];
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = filename;
+  link.download = "commerce-orders.csv";
   link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  URL.revokeObjectURL(url);
 }
 
-function setSaveState(text) {
-  el.saveState.textContent = text;
+function csvCell(value) {
+  const text = String(value ?? "");
+  return '"' + text.replace(/"/g, '""') + '"';
 }
 
-function showNotice(message) {
-  el.notice.textContent = message;
+function paymentMethodLabel(value) {
+  return ({ cod: "COD", bank_transfer: "Chuyển khoản", payos: "PayOS" })[value] || value;
+}
+
+function money(value) {
+  return new Intl.NumberFormat("vi-VN").format(Number(value) || 0) + "đ";
+}
+
+function formatDate(value) {
+  try {
+    return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+  } catch {
+    return value;
+  }
+}
+
+function slugify(value) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
 function formatBytes(bytes) {
@@ -254,48 +512,47 @@ function formatBytes(bytes) {
   return (bytes / (1024 * 1024)).toFixed(2) + " MB";
 }
 
-function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[char]));
+function showNotice(target, message) {
+  target.textContent = message;
 }
 
-el.newProduct.addEventListener("click", newProduct);
-el.exportButton.addEventListener("click", exportCurrent);
-el.publishButton.addEventListener("click", publishCurrent);
-el.downloadImageButton.addEventListener("click", downloadOptimizedImage);
-el.form.addEventListener("submit", saveDraft);
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+}
 
+function escapeAttribute(value) {
+  return escapeHtml(value);
+}
+
+el.tabs.forEach((tab) => tab.addEventListener("click", () => switchView(tab.dataset.view)));
+el.logout.addEventListener("click", logout);
+el.loginForm.addEventListener("submit", login);
+el.newProduct.addEventListener("click", newProduct);
 el.name.addEventListener("input", () => {
   const product = currentProduct();
-  if (product && product.id.startsWith("san-pham-moi-")) {
-    el.slug.value = slugify(el.name.value);
-  }
-  setSaveState("Chưa lưu");
+  if (product?._new) el.slug.value = slugify(el.name.value);
 });
-
-[el.slug, el.price, el.description, el.active].forEach((input) => {
-  input.addEventListener("input", () => setSaveState("Chưa lưu"));
-});
-
 el.imageInput.addEventListener("change", async () => {
   const file = el.imageInput.files?.[0];
   if (!file) return;
-
-  try {
-    await optimizeImage(file);
-    setSaveState("Chưa lưu");
-  } catch (error) {
-    showNotice(error instanceof Error ? error.message : "Không thể xử lý ảnh.");
-  }
+  try { await optimizeImage(file); } catch (error) { showNotice(el.productNotice, error.message); }
 });
+el.saveDraft.addEventListener("click", () => saveProduct("draft").catch((error) => showNotice(el.productNotice, error.message)));
+el.preview.addEventListener("click", () => saveProduct("draft", true).catch((error) => showNotice(el.productNotice, error.message)));
+el.publish.addEventListener("click", () => saveProduct("publish").catch((error) => showNotice(el.productNotice, error.message)));
+el.refreshOrders.addEventListener("click", () => loadOrders().catch((error) => showNotice(el.ordersNotice, error.message)));
+el.exportOrders.addEventListener("click", exportOrdersCsv);
+el.saveSettingsDraft.addEventListener("click", () => saveSettings("draft").catch((error) => showNotice(el.settingsNotice, error.message)));
+el.publishSettings.addEventListener("click", () => saveSettings("publish").catch((error) => showNotice(el.settingsNotice, error.message)));
 
-if (state.products.length) {
-  selectProduct(state.products[0].id);
-} else {
-  newProduct();
-}
+(async function init() {
+  if (!state.token) {
+    showLogin();
+    return;
+  }
+  try {
+    await loadCatalog();
+  } catch (error) {
+    if (state.token) showNotice(el.productNotice, error.message);
+  }
+})();

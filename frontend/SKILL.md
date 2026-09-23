@@ -1,74 +1,93 @@
 ---
 name: commerce-core-storefront
-description: Build or modify a storefront compatible with commerce-core contracts.
-version: 0.1.0
+description: Build or modify a storefront compatible with commerce-core v1.
+version: 1.0.0
 ---
 
 # commerce-core storefront skill
 
-Use this skill when creating a new storefront implementation for commerce-core.
+Use this skill when creating or modifying a storefront that connects to commerce-core v1.
 
 ## Read first
-
-Before editing storefront behavior, read:
 
 1. `../contracts/store.schema.json`
 2. `../contracts/product.schema.json`
 3. `../contracts/storefront.md`
 4. `../contracts/commerce-api.md`
-5. `../docs/DESIGN.md` for shared UI principles
+5. `../docs/DESIGN.md`
 
 ## Goal
 
-Create a storefront with a custom visual identity while preserving the shared commerce contract.
+The visual storefront may be completely custom. Commerce semantics must stay compatible.
 
-Product over technology. Use the simplest frontend stack that fits the requested store.
+## Required data
 
-## Preserve
-
-- `product.id` is the canonical product identifier
-- `product.slug` is for human-friendly URLs
-- cart items contain product ID and quantity
-- a real checkout sends IDs and quantities, not an authoritative total
-- payment and shipping choices come from store configuration
-- mobile checkout must remain usable
-- a frontend must not invent a different product schema just for its design
-
-## Required flow
+Read static data from:
 
 ```text
-Browse products
--> view enough product detail
--> add to cart
--> update/remove cart items
--> checkout
--> choose shipping/payment
--> submit to commerce API when connected
+data/store.json
+data/products.json
 ```
+
+Do not invent a separate catalog shape for a new design.
+
+## Required cart shape
+
+```json
+{
+  "productId": "pixel-clock-mini",
+  "quantity": 1
+}
+```
+
+Do not persist browser price as authoritative transaction data.
+
+## Required checkout
+
+Submit to:
+
+```http
+POST <COMMERCE_API_BASE>/api/v1/checkout
+```
+
+Send storeId, productId + quantity items, customer name/phone/address, shippingMethod and paymentMethod.
+
+Never send a trusted total. Use the response total as final.
+
+## Payment behavior
+
+Handle all three response modes:
+
+- `none`: show order ID and confirmation
+- `bank_transfer`: show returned bank details, transfer note and final total
+- `redirect`: navigate to `payment.url`
+
+Do not put payOS credentials in frontend code.
+
+## Payment return
+
+When the storefront receives:
+
+```text
+?payment=success&order=...&token=...
+```
+
+query:
+
+```http
+GET /api/v1/orders/{orderId}?token={orderToken}
+```
+
+Do not treat `payment=success` by itself as proof of payment. The Worker updates paid state from verified payOS webhook data.
 
 ## Visual freedom
 
-The storefront may change:
+You may change typography, layout, product card, navigation, product detail presentation, motion, color system and responsive composition.
 
-- layout
-- typography
-- spacing
-- product card design
-- navigation
-- product detail presentation
-- visual theme
+You must preserve product IDs, cart semantics, checkout semantics, order-token privacy, accessible core actions and mobile usability around 375px.
 
-Do not change product or checkout semantics without changing the shared contracts first.
+## Implementation preference
 
-## Current demo
+Use the simplest stack that fits the requested storefront.
 
-The included v0.1 frontend is dependency-free and uses local demo JSON.
-
-It intentionally simulates checkout because the commerce API is not implemented yet.
-
-When connecting a real API:
-
-1. replace demo checkout with `POST /api/v0.1/checkout`
-2. use the response total/status as authoritative
-3. handle API errors visibly
-4. do not move payment secrets into browser code
+A generated frontend may use a framework if the client experience materially benefits, but do not add infrastructure only because the generator prefers it.
