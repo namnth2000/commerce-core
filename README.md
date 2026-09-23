@@ -51,7 +51,7 @@ commerce-core/
 
 ## Local start
 
-Static apps:
+Start the static Admin + Storefront from repository root:
 
 ```bash
 python -m http.server 8000
@@ -64,27 +64,54 @@ http://localhost:8000/admin/
 http://localhost:8000/frontend/
 ```
 
-Backend:
+Then start the Worker:
 
 ```bash
 cd backend
 npm install
 cp wrangler.toml.example wrangler.toml
 cp .dev.vars.example .dev.vars
-```
-
-Create/configure D1 as described in `docs/DEPLOYMENT.md`, then:
-
-```bash
 npm run db:migrate:local
 npm run dev
 ```
 
-The static app configs default to:
+The static apps default to:
 
 ```text
 http://localhost:8787
 ```
+
+For basic local testing, set only:
+
+```text
+ADMIN_PASSWORD=...
+SESSION_SECRET=...
+```
+
+in `backend/.dev.vars`.
+
+With the default local `CATALOG_BASE_URL`, both checkout and Admin read:
+
+```text
+http://localhost:8000/frontend/data
+```
+
+So a GitHub token is **not required** for:
+
+- Admin login
+- viewing/editing the loaded product form
+- viewing store settings
+- Orders
+- COD / bank-transfer checkout
+- local D1 order updates
+
+`GITHUB_TOKEN` is only required when testing:
+
+- Save draft
+- Preview
+- Publish
+
+See `docs/DEPLOYMENT.md` for the full setup.
 
 ## Deploy
 
@@ -96,7 +123,8 @@ Production direction:
 - Admin Portal: Cloudflare Pages
 - API: Cloudflare Worker
 - Orders/payment state: D1
-- Catalog/content/assets: GitHub
+- Published catalog reads: `CATALOG_BASE_URL`
+- Catalog/content/assets publishing: GitHub
 - Product assets: Git in v1, R2 later only if needed
 
 ## Development

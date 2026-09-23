@@ -45,28 +45,43 @@ Edit `wrangler.toml`:
 
 - `STOREFRONT_ORIGIN`: storefront origin
 - `ADMIN_ORIGIN`: admin Pages origin
-- `CATALOG_BASE_URL`: storefront origin + `/data`
-- `GITHUB_REPO`: repository containing the storefront
+- `CATALOG_BASE_URL`: published storefront origin + `/data`
+- `GITHUB_REPO`: repository used for Draft / Publish
 - `GITHUB_MAIN_BRANCH`: normally `main`
 - `PAGES_PROJECT_NAME`: storefront Pages project
 - `PAYOS_RETURN_BASE_URL`: storefront URL
 - D1 `database_id`
 
+For local development, `CATALOG_BASE_URL` can remain:
+
+```text
+http://localhost:8000/frontend/data
+```
+
+Admin catalog browsing and checkout will then use the local JSON files without calling GitHub.
+
 Do not commit `wrangler.toml` after inserting store-specific values. It is ignored under `backend/.gitignore`.
 
 ## 4. Local secrets
 
-For local development, edit `backend/.dev.vars`:
+For basic local testing, only these are required:
 
 ```text
 ADMIN_PASSWORD=...
 SESSION_SECRET=...
-GITHUB_TOKEN=...
 ```
 
 Generate a long random `SESSION_SECRET`.
 
-Use a fine-grained GitHub token restricted to this repository with Contents read/write permission.
+`GITHUB_TOKEN` is optional until you test:
+
+- Save draft
+- Preview
+- Publish
+
+When testing those actions, use a fine-grained GitHub token restricted to this repository with Contents read/write permission.
+
+PayOS secrets are only required when `payos` is enabled in store config.
 
 ## 5. Apply D1 migration
 
@@ -93,6 +108,19 @@ Default Wrangler dev URL is normally:
 ```text
 http://localhost:8787
 ```
+
+At this point, without a GitHub token, you can already test:
+
+- `GET /health`
+- Admin login
+- Admin catalog loading
+- Orders tab
+- COD checkout
+- bank-transfer checkout
+- order status updates
+- revenue summary
+
+Draft / Preview / Publish will still require GitHub credentials.
 
 ## 7. Configure static apps
 
@@ -165,7 +193,7 @@ Verify in this order:
 
 1. `GET /health`
 2. Admin login
-3. Admin catalog load
+3. Admin catalog load from `CATALOG_BASE_URL`
 4. Save draft for a product
 5. Open preview URL
 6. Publish product

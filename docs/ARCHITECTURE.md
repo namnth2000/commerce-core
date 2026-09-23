@@ -10,21 +10,24 @@
                        |
                 Commerce Worker
                  /api/v1/admin
-                       |
-          +------------+------------+
-          |                         |
-      GitHub API                    D1
- catalog/config/assets       orders/payments
-          |
-    production + draft
-          |
-    Cloudflare Pages
-          |
-       Storefront
-          |
-      /api/v1/checkout
-          |
-    Commerce Worker
+                  /          \
+                 /            \
+       read catalog          publish
+              |                 |
+              v                 v
+     CATALOG_BASE_URL       GitHub API
+              |          draft + main branches
+              v                 |
+      Production Pages <--------+
+              |
+          Storefront
+              |
+       /api/v1/checkout
+              |
+       Commerce Worker
+              |
+              D1
+      orders / payments
 ```
 
 v1 is intentionally one store per deployment. Multi-tenant infrastructure is deferred.
@@ -41,7 +44,29 @@ Git owns relatively slow-changing content:
 - policies
 - storefront source
 
-Admin writes to GitHub only through the Worker.
+Git is the publishing source of truth, but normal Admin reads do not call GitHub directly.
+
+### Published catalog
+
+Both storefront checkout and Admin catalog loading read the currently published catalog through:
+
+```text
+CATALOG_BASE_URL
+```
+
+Local:
+
+```text
+http://localhost:8000/frontend/data
+```
+
+Production:
+
+```text
+https://store.example.com/data
+```
+
+This keeps local and production behavior aligned and makes GitHub an optional dependency until the merchant actually saves a draft or publishes.
 
 ### D1
 
@@ -54,6 +79,29 @@ D1 owns transaction state:
 - payOS events
 
 Orders must never be represented as Git commits.
+
+## Catalog read vs publish
+
+Read:
+
+```text
+Admin or checkout
+-> Worker
+-> CATALOG_BASE_URL
+-> store.json + products.json
+```
+
+Publish:
+
+```text
+Admin
+-> Worker
+-> GitHub API
+-> draft branch or main
+-> Cloudflare Pages deploy
+```
+
+This separation is intentional. GitHub is a publishing adapter, not a runtime database for Admin browsing.
 
 ## Catalog publishing
 
@@ -150,6 +198,8 @@ The Worker exposes a single-admin password flow:
 For a public production deployment, Cloudflare Access may additionally protect the Admin Portal and/or Worker admin routes.
 
 ## GitHub credentials
+
+A GitHub token is only required for Draft / Preview / Publish operations.
 
 Use a fine-grained token limited to the storefront repository with Contents write permission.
 
