@@ -1,19 +1,12 @@
-# Commerce API Contract v0.1
+# Commerce API Contract v1
 
-This is a draft boundary for storefronts. The backend is not implemented in v0.1.
-
-Base path used in examples:
+Base path:
 
 ```text
-/api/v0.1
+/api/v1
 ```
 
-## Create checkout
-
-```http
-POST /api/v0.1/checkout
-Content-Type: application/json
-```
+## POST /checkout
 
 Request:
 
@@ -21,10 +14,7 @@ Request:
 {
   "storeId": "deskbits",
   "items": [
-    {
-      "productId": "pixel-clock-mini",
-      "quantity": 1
-    }
+    { "productId": "pixel-clock-mini", "quantity": 1 }
   ],
   "customer": {
     "name": "Nguyen Van A",
@@ -36,13 +26,14 @@ Request:
 }
 ```
 
-The request deliberately contains no authoritative price.
+Do not send authoritative price or total.
 
-Response:
+Success:
 
 ```json
 {
-  "orderId": "ORD-1001",
+  "orderId": "ORD-20260923-A1B2C3D4",
+  "orderToken": "random-private-token",
   "status": "confirmed",
   "subtotal": 489000,
   "shippingFee": 30000,
@@ -54,48 +45,47 @@ Response:
 }
 ```
 
-Possible payment response for a redirect-based provider:
+Payment variants:
+
+```json
+{ "payment": { "type": "redirect", "url": "https://..." } }
+```
 
 ```json
 {
   "payment": {
-    "type": "redirect",
-    "url": "https://payment-provider.example/checkout/..."
+    "type": "bank_transfer",
+    "bankName": "Example Bank",
+    "accountName": "NGUYEN VAN A",
+    "accountNumber": "123456789",
+    "transferNote": "DON ORD-..."
   }
 }
 ```
 
-## Get order
+## GET /orders/{orderId}?token={orderToken}
 
-```http
-GET /api/v0.1/orders/{orderId}
+Returns public-safe order status. Customer PII is not returned.
+
+## POST /webhooks/payos
+
+Receives payOS webhook JSON. The Worker verifies the webhook with the store's payOS checksum key before updating payment state.
+
+## Admin API
+
+All admin routes except session creation require an HMAC-signed admin session token.
+
+```text
+POST  /admin/session
+GET   /admin/catalog
+POST  /admin/products/save
+POST  /admin/store/save
+GET   /admin/orders
+GET   /admin/summary
+PATCH /admin/orders/{orderId}
 ```
 
-Example response:
-
-```json
-{
-  "orderId": "ORD-1001",
-  "status": "confirmed",
-  "paymentStatus": "unpaid",
-  "fulfillmentStatus": "new",
-  "total": 519000,
-  "currency": "VND"
-}
-```
-
-## Trust rules
-
-A production backend must:
-
-- resolve product existence server-side
-- resolve authoritative prices server-side
-- validate enabled shipping/payment methods
-- calculate totals server-side
-- validate provider callbacks server-side
-- never trust a total sent by the browser
-
-How the backend synchronizes the published Git catalog is intentionally not fixed in v0.1.
+GitHub credentials remain Worker secrets and are never returned to the browser.
 
 ## Error shape
 
@@ -108,4 +98,4 @@ How the backend synchronizes the published Git catalog is intentionally not fixe
 }
 ```
 
-Keep error codes stable enough for storefronts to handle. Human-readable messages may change.
+Stable `error.code` values are for frontend handling. Message text may change.

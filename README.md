@@ -1,71 +1,112 @@
 # commerce-core
 
-A small, reusable commerce foundation for building custom online stores without rebuilding the same backend and workflow for every client.
+A small reusable commerce foundation for service-led custom online stores.
 
-The repository is intentionally simple. Product content and store configuration are file-based. Transactional data such as orders and payments will belong to the commerce API when that layer is implemented.
+v1 separates slow-changing store content from transaction state:
 
-## Status
+```text
+Git + Cloudflare Pages
+store / products / assets / storefront
+              |
+              | checkout
+              v
+Cloudflare Worker + D1
+orders / payments / fulfillment
+```
 
-v0.1 is a working concept slice:
+## v1
 
-- contract drafts for store data, products, storefront behavior and commerce API
-- a static Admin Portal prototype
-- client-side image resize/compression in the Admin Portal
-- a static storefront demo for office tech toys and desk decor
-- an AI storefront skill that explains how a compatible frontend should be built
+Included:
 
-GitHub writes, Cloudflare Worker APIs, D1, real checkout and payment integrations are not implemented yet.
+- Git-backed product and store publishing
+- Draft branch + Cloudflare Pages preview workflow
+- client-side WebP image optimization
+- real D1 order storage
+- server-authoritative checkout totals
+- COD
+- manual bank transfer
+- optional payOS payment link + verified webhook
+- Admin order management
+- Storefront contract + AI storefront skill
+
+Not included:
+
+- drag-and-drop builder
+- customer accounts
+- advanced inventory
+- carrier APIs
+- CRM/accounting/tax filing
+- multi-tenant SaaS
 
 ## Repository
 
 ```text
 commerce-core/
-├── admin/       Admin Portal prototype
-├── contracts/   v0.1 contracts and examples
-├── docs/        Product, architecture and design truth
-└── frontend/    Demo storefront and storefront skill
+├── admin/       Merchant Admin Portal
+├── backend/     Cloudflare Worker + D1
+├── contracts/   Store, product, order and API v1 contracts
+├── docs/        Product, architecture, deployment and security
+└── frontend/    Deskbits demo storefront + AI storefront skill
 ```
 
-## Run locally
+## Local start
 
-No package install is required.
-
-From the repository root:
+Static apps:
 
 ```bash
 python -m http.server 8000
 ```
 
-Then open:
+Open:
 
 ```text
 http://localhost:8000/admin/
 http://localhost:8000/frontend/
 ```
 
-You can also use any simple static HTTP server.
+Backend:
+
+```bash
+cd backend
+npm install
+cp wrangler.toml.example wrangler.toml
+cp .dev.vars.example .dev.vars
+```
+
+Create/configure D1 as described in `docs/DEPLOYMENT.md`, then:
+
+```bash
+npm run db:migrate:local
+npm run dev
+```
+
+The static app configs default to:
+
+```text
+http://localhost:8787
+```
+
+## Deploy
+
+Follow `docs/DEPLOYMENT.md` step by step.
+
+Production direction:
+
+- Storefront: Cloudflare Pages
+- Admin Portal: Cloudflare Pages
+- API: Cloudflare Worker
+- Orders/payment state: D1
+- Catalog/content/assets: GitHub
+- Product assets: Git in v1, R2 later only if needed
 
 ## Development
 
-Read these before changing behavior:
+Read:
 
-1. `docs/PRODUCT.md`
-2. `docs/ARCHITECTURE.md` when changing data ownership or integrations
-3. `contracts/` when changing data exchanged between parts
-4. `docs/DESIGN.md` when changing UI direction
-5. `AGENTS.md` for implementation rules
+1. `AGENTS.md`
+2. `docs/PRODUCT.md`
+3. `docs/ARCHITECTURE.md`
+4. `contracts/`
+5. `docs/DESIGN.md`
 
-Keep v0.x changes small and prove one end-to-end flow before adding infrastructure.
-
-## Deployment direction
-
-The intended first production shape is:
-
-- Storefront: Cloudflare Pages connected to GitHub
-- Admin Portal: Cloudflare Pages
-- Git operations: backend Worker using GitHub API, never a browser token
-- Transaction API: Cloudflare Worker
-- Orders/payments: D1
-- Product images: Git first, R2 later if real usage makes Git storage painful
-
-See `docs/ARCHITECTURE.md` for details.
+Keep changes driven by repeated real merchant needs.

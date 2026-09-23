@@ -1,111 +1,110 @@
 # Product
 
-## What commerce-core is
+## What commerce-core v1 is
 
-commerce-core is a reusable foundation for quickly delivering custom online stores to small merchants.
+commerce-core is a reusable foundation for delivering custom online stores to small merchants without rebuilding catalog publishing, checkout and order handling for every client.
 
-The first business model is service-led: build stores for real clients, learn which requirements repeat, and move repeated needs into the shared core.
+The initial business model is service-led. Build stores for real clients, learn repeated requirements, then move repeated needs into the core.
 
 It is not a Shopify replacement.
 
-## Target user
+## Initial merchant
 
-Initial merchant:
+The first target merchant:
 
 - sells mainly through Facebook, Zalo or similar channels
 - has a small catalog
 - wants a proper store website without learning web development
-- wants to keep their own payment methods such as COD, bank transfer or PayOS
-- values a storefront that can look different from a generic template
+- wants to keep their own payment account
+- values a storefront that does not look like every other template
 
-## Core outcome
-
-A merchant can maintain a simple catalog and publish a custom storefront while the implementation stays reusable across clients.
-
-A shopper can browse products, add items to a cart and submit checkout information through a consistent frontend contract.
-
-## v0.1
-
-v0.1 exists to make the architecture tangible, not to be production commerce software.
-
-Included:
-
-- store and product contract drafts
-- storefront contract
-- commerce API contract draft
-- static Admin Portal prototype
-- image resize/compression before an image would be committed
-- static storefront demo
-- AI skill for building compatible storefronts
-
-## Admin flow
+## v1 merchant flow
 
 ```text
-Edit product
--> optimize image
--> save draft
--> preview
--> publish
+Admin login
+-> edit product or store settings
+-> optimize product image
+-> Save draft
+-> inspect Cloudflare Pages preview
+-> Publish
 ```
 
-In v0.1 Save draft is local and Publish is a demo handoff. A backend Git adapter is intentionally not connected yet.
+Git stays underneath the experience. The merchant sees Draft, Preview and Publish, not branch/commit terminology.
 
-Later, these concepts map to Git operations without exposing Git terminology to merchants.
-
-## Shopper flow
+## v1 shopper flow
 
 ```text
 Browse
--> view product
--> add to cart
+-> cart
 -> checkout
--> choose payment method
--> create order
+-> shipping
+-> COD / bank transfer / optional PayOS
+-> order created
+-> merchant manages fulfillment
 ```
 
-v0.1 demonstrates the browser flow only. It does not create a real order.
+## v1 capabilities
 
-## Product boundaries
+### Catalog
 
-Store repository owns:
+- store settings in Git
+- products in Git
+- product image compression in Admin Portal
+- GitHub-backed draft and production publishing
+- Cloudflare Pages branch preview link
+
+### Commerce
+
+- authoritative server-side checkout totals
+- D1 order storage
+- order item price snapshots
+- COD
+- manual bank transfer
+- optional payOS payment link + verified webhook
+- public order status protected by random order token
+
+### Admin
+
+- password session
+- product editor
+- store settings
+- order list
+- manual payment/fulfillment status updates
+- paid revenue summary
+- CSV order export in the browser
+
+## Data ownership
+
+Git owns:
 
 - store identity
-- catalog content
-- product images
+- products
+- content
 - policies
-- theme/content configuration
-- static frontend source
+- static assets
+- storefront code
 
-Commerce backend will own:
+D1 owns:
 
 - orders
-- payment status and payment events
+- order item snapshots
+- payment state
 - fulfillment state
-- revenue records
-- realtime inventory if it becomes necessary
+- payment events
 
-## Not now
+## Explicitly not v1
 
-Do not add yet:
-
-- drag-and-drop storefront builder
+- drag-and-drop builder
 - customer accounts
 - CRM
 - loyalty
 - omnichannel sync
-- warehouse management
+- carrier API integration
+- advanced inventory
 - tax filing
 - accounting
-- advanced inventory
-- multi-tenant SaaS administration
-- complex theme system
+- coupons
+- multi-tenant SaaS
+- user-managed GitHub onboarding
 
-## Done for v0.1
-
-v0.1 is useful when a developer can:
-
-1. understand the intended data boundaries from the docs and contracts
-2. run Admin Portal and storefront locally without installing dependencies
-3. edit a demo product and optimize an uploaded image in Admin Portal
-4. browse products, use a cart and complete a demo checkout in the storefront
-5. use `frontend/SKILL.md` to understand how another compatible storefront should be generated
+For tax/accounting workflow, v1 provides order data that can be exported. It does not calculate or file tax.

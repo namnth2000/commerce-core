@@ -1,50 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://commerce-core.local/contracts/store.schema.json",
-  "title": "commerce-core Store v0.1",
+  "title": "commerce-core Store v1",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schemaVersion",
-    "id",
-    "name",
-    "currency",
-    "locale",
-    "contact",
-    "checkout"
-  ],
+  "required": ["schemaVersion", "id", "name", "currency", "locale", "contact", "checkout"],
   "properties": {
-    "schemaVersion": {
-      "const": "0.1"
-    },
-    "id": {
-      "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9-]*$"
-    },
-    "name": {
-      "type": "string",
-      "minLength": 1
-    },
-    "tagline": {
-      "type": "string"
-    },
-    "currency": {
-      "type": "string",
-      "minLength": 3,
-      "maxLength": 3
-    },
-    "locale": {
-      "type": "string",
-      "minLength": 2
-    },
+    "schemaVersion": { "const": "1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "tagline": { "type": "string", "maxLength": 240 },
+    "currency": { "const": "VND" },
+    "locale": { "type": "string", "minLength": 2, "maxLength": 20 },
     "contact": {
       "type": "object",
       "additionalProperties": false,
       "required": ["phone"],
       "properties": {
-        "phone": { "type": "string", "minLength": 1 },
-        "email": { "type": ["string", "null"] },
-        "address": { "type": ["string", "null"] }
+        "phone": { "type": "string", "minLength": 1, "maxLength": 30 },
+        "email": { "type": ["string", "null"], "maxLength": 254 },
+        "address": { "type": ["string", "null"], "maxLength": 500 }
       }
     },
     "social": {
@@ -63,9 +38,8 @@
         "paymentMethods": {
           "type": "array",
           "minItems": 1,
-          "items": {
-            "enum": ["cod", "bank_transfer", "payos"]
-          }
+          "uniqueItems": true,
+          "items": { "enum": ["cod", "bank_transfer", "payos"] }
         },
         "shippingMethods": {
           "type": "array",
@@ -75,19 +49,21 @@
             "additionalProperties": false,
             "required": ["id", "name", "fee"],
             "properties": {
-              "id": {
-                "type": "string",
-                "pattern": "^[a-z0-9][a-z0-9-]*$"
-              },
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "fee": {
-                "type": "integer",
-                "minimum": 0
-              }
+              "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+              "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+              "fee": { "type": "integer", "minimum": 0 }
             }
+          }
+        },
+        "bankTransfer": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["bankName", "accountName", "accountNumber"],
+          "properties": {
+            "bankName": { "type": "string", "minLength": 1, "maxLength": 100 },
+            "accountName": { "type": "string", "minLength": 1, "maxLength": 100 },
+            "accountNumber": { "type": "string", "minLength": 1, "maxLength": 50 },
+            "transferNotePrefix": { "type": "string", "maxLength": 20 }
           }
         }
       }

@@ -1,62 +1,32 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://commerce-core.local/contracts/product.schema.json",
-  "title": "commerce-core Product v0.1",
+  "title": "commerce-core Product v1",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schemaVersion",
-    "id",
-    "slug",
-    "name",
-    "description",
-    "price",
-    "images",
-    "active"
-  ],
+  "required": ["schemaVersion", "id", "slug", "name", "description", "price", "images", "active"],
   "properties": {
-    "schemaVersion": {
-      "const": "0.1"
-    },
-    "id": {
-      "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9-]*$"
-    },
-    "slug": {
-      "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9-]*$"
-    },
-    "name": {
-      "type": "string",
-      "minLength": 1
-    },
-    "description": {
-      "type": "string"
-    },
+    "schemaVersion": { "const": "1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "description": { "type": "string", "maxLength": 5000 },
     "price": {
       "type": "integer",
       "minimum": 0,
-      "description": "Whole amount in the store currency. For VND this is whole dong."
+      "description": "Whole amount in VND."
     },
-    "compareAtPrice": {
-      "type": ["integer", "null"],
-      "minimum": 0
-    },
+    "compareAtPrice": { "type": ["integer", "null"], "minimum": 0 },
     "images": {
       "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1
-      }
+      "maxItems": 10,
+      "items": { "type": "string", "minLength": 1 }
     },
     "tags": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 60 }
     },
-    "active": {
-      "type": "boolean"
-    }
+    "active": { "type": "boolean" }
   }
 }

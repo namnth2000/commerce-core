@@ -1,124 +1,174 @@
 # Architecture
 
-## Principle
-
-Keep static commerce content separate from transactional state.
+## Production shape
 
 ```text
-                Merchant
-                   |
-             Admin Portal
-                   |
-        future Git API Worker
-                   |
-              Store repo
-                   |
-          Cloudflare Pages
-                   |
-              Storefront
-                   |
-             checkout API
-                   |
-        future Commerce Worker
-                   |
-                   D1
+                    Merchant
+                       |
+                 Admin Portal
+                 Cloudflare Pages
+                       |
+                Commerce Worker
+                 /api/v1/admin
+                       |
+          +------------+------------+
+          |                         |
+      GitHub API                    D1
+ catalog/config/assets       orders/payments
+          |
+    production + draft
+          |
+    Cloudflare Pages
+          |
+       Storefront
+          |
+      /api/v1/checkout
+          |
+    Commerce Worker
 ```
 
-## Data ownership
+v1 is intentionally one store per deployment. Multi-tenant infrastructure is deferred.
 
-### Git repository
+## Source of truth
 
-Git is the initial source of truth for data that changes relatively infrequently and benefits from review/history:
+### Git
 
-- store settings
-- product catalog
-- product descriptions
-- product images
-- policy content
-- frontend code
-- theme/content configuration
+Git owns relatively slow-changing content:
 
-### Transaction backend
+- `frontend/data/store.json`
+- `frontend/data/products.json`
+- product assets
+- policies
+- storefront source
 
-A future Cloudflare Worker + D1 owns data that changes during commerce operations:
+Admin writes to GitHub only through the Worker.
+
+### D1
+
+D1 owns transaction state:
 
 - orders
-- payment events/status
-- fulfillment state
-- revenue records
-- realtime inventory if added
+- order item snapshots
+- payment status
+- fulfillment status
+- payOS events
 
-Do not store orders or payment state as Git commits.
+Orders must never be represented as Git commits.
 
-## Admin Portal
+## Catalog publishing
 
-The browser UI should use merchant language:
-
-- Save draft
-- Preview
-- Publish
-
-The backend implementation may translate those actions to:
+Save draft:
 
 ```text
-Save draft -> create/update draft branch
-Preview    -> Cloudflare preview deployment
-Publish    -> update production branch
+Admin
+-> Worker
+-> draft/<slug>
+-> GitHub commit(s)
+-> Cloudflare Pages preview
 ```
 
-The browser must not receive a GitHub secret. GitHub API calls requiring credentials belong behind a server-side Worker.
+Publish:
 
-v0.1 intentionally stops before this adapter and uses local demo behavior.
+```text
+Admin
+-> Worker
+-> main
+-> Cloudflare Pages production deploy
+```
+
+GitHub's contents API is used serially. Product image and catalog JSON may be separate commits in v1. This is acceptable for the small-store target and avoids building a custom Git data layer too early.
 
 ## Images
 
-Initial path:
+Admin Portal:
+
+- accepts browser-readable images
+- resizes the largest dimension to at most 1600px
+- re-encodes to WebP at quality 0.82
+- rejects publish payloads over 1.5 MB after optimization
+
+New product images are stored under:
 
 ```text
-Upload
--> resize
--> convert to WebP
--> remove unnecessary metadata through re-encoding
--> commit optimized asset
+frontend/assets/products/
 ```
 
-Default target for the prototype:
-
-- maximum dimension: 1600px
-- WebP quality: 0.82
-- original file is not kept by the Admin Portal
-
-Git storage is acceptable for the first small stores. If clone/build speed or asset volume becomes a real problem, replace the asset implementation with R2 without changing product data semantics.
-
-## Storefront
-
-A storefront is replaceable.
-
-Any implementation is valid if it follows:
-
-- `contracts/store.schema.json`
-- `contracts/product.schema.json`
-- `contracts/storefront.md`
-- `contracts/commerce-api.md`
-
-The frontend must not depend on how the commerce backend stores orders.
+Git remains the v1 asset store. Move to R2 only when real repositories/builds become painful.
 
 ## Checkout trust boundary
 
-The browser may send product identifiers and quantities.
+The storefront reads public static prices for display.
 
-A production commerce API must not trust browser-supplied prices or totals. The core must resolve authoritative pricing from the published catalog or another server-side catalog representation.
+For checkout, Worker reloads the published catalog from `CATALOG_BASE_URL` and recalculates:
 
-The exact synchronization mechanism is deliberately not fixed in v0.1.
+- product availability
+- unit prices
+- subtotal
+- enabled shipping method
+- shipping fee
+- enabled payment method
+- final total
 
-## Deployment direction
+The Worker ignores browser-provided prices because none are accepted by contract.
 
-First production target:
+## Payment
 
-- frontend: Cloudflare Pages, Git connected
-- admin: Cloudflare Pages
-- Git adapter: Cloudflare Worker
-- commerce API: Cloudflare Worker
-- transactions: D1
+### COD
 
-Do not add these services until the static v0.1 contract has been exercised.
+Order is created as confirmed and unpaid.
+
+### Manual bank transfer
+
+Order is created as confirmed and unpaid. Bank details come from public store config and the Worker returns an order-specific transfer note.
+
+### payOS
+
+Credentials are Worker secrets.
+
+```text
+Checkout
+-> create D1 order
+-> Worker creates payOS payment request
+-> shopper pays
+-> payOS webhook
+-> Worker verifies signature
+-> D1 payment_status = paid
+```
+
+Money goes to the merchant's connected payOS/bank account. commerce-core does not hold merchant funds.
+
+## Admin security
+
+The Worker exposes a single-admin password flow:
+
+1. browser sends password to `POST /api/v1/admin/session` over HTTPS
+2. Worker compares it with `ADMIN_PASSWORD`
+3. Worker returns an 8-hour HMAC-signed session token
+4. Admin keeps the session token in `sessionStorage`
+5. GitHub token and payment secrets never enter the browser
+
+For a public production deployment, Cloudflare Access may additionally protect the Admin Portal and/or Worker admin routes.
+
+## GitHub credentials
+
+Use a fine-grained token limited to the storefront repository with Contents write permission.
+
+Store it only with:
+
+```bash
+wrangler secret put GITHUB_TOKEN
+```
+
+Do not put it in `admin/config.js`, frontend code or committed configuration.
+
+## Future replaceable boundaries
+
+The v1 shapes intentionally allow later replacement:
+
+```text
+Git assets -> R2
+password admin -> Cloudflare Access / account auth
+flat shipping -> carrier adapters
+single store -> tenant-aware deployment
+static storefront -> AI-generated storefronts
+```

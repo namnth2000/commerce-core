@@ -1,0 +1,19 @@
+name = "commerce-core-api"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+STOREFRONT_ORIGIN = "http://localhost:8000"
+ADMIN_ORIGIN = "http://localhost:8000"
+CATALOG_BASE_URL = "http://localhost:8000/frontend/data"
+GITHUB_REPO = "namnth2000/commerce-core"
+GITHUB_MAIN_BRANCH = "main"
+PAGES_PROJECT_NAME = "replace-with-your-pages-project"
+PAYOS_RETURN_BASE_URL = "http://localhost:8000/frontend/"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "commerce-core"
+database_id = "replace-with-your-d1-id"
+migrations_dir = "migrations"
