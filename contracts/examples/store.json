@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1",
+  "id": "deskbits",
+  "name": "Deskbits",
+  "tagline": "Đồ chơi công nghệ nhỏ cho góc làm việc vui hơn",
+  "currency": "VND",
+  "locale": "vi-VN",
+  "contact": {
+    "phone": "0900000000",
+    "email": "hello@example.com",
+    "address": null
+  },
+  "social": {
+    "facebook": null,
+    "tiktok": null
+  },
+  "checkout": {
+    "paymentMethods": ["cod", "bank_transfer"],
+    "shippingMethods": [
+      {
+        "id": "standard",
+        "name": "Giao hàng tiêu chuẩn",
+        "fee": 30000
+      }
+    ]
+  }
+}
