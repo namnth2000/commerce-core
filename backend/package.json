@@ -12,11 +12,10 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@payos/node": "^2.0.5",
-    "jose": "^6.1.0"
+    "@payos/node": "^2.0.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260920.0",
+    "@cloudflare/workers-types": "^4.0.0",
     "typescript": "^5.9.2",
     "wrangler": "^4.0.0"
   }
