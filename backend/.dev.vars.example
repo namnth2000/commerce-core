@@ -1,0 +1,8 @@
+ADMIN_PASSWORD=change-me
+SESSION_SECRET=replace-with-a-long-random-secret
+GITHUB_TOKEN=github_pat_replace_me
+
+# Optional. Required only when "payos" is enabled in store.json.
+PAYOS_CLIENT_ID=
+PAYOS_API_KEY=
+PAYOS_CHECKSUM_KEY=

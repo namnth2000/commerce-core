@@ -1,12 +1,12 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "1",
   "id": "pixel-clock-mini",
   "slug": "pixel-clock-mini",
   "name": "Pixel Clock Mini",
-  "description": "Đồng hồ pixel nhỏ gọn để bàn, hiển thị giờ và tạo điểm nhấn cho góc làm việc.",
+  "description": "Đồng hồ pixel nhỏ gọn để bàn.",
   "price": 489000,
   "compareAtPrice": null,
-  "images": ["/products/pixel-clock-mini.webp"],
+  "images": ["./assets/pixel-clock.svg"],
   "tags": ["desk", "decor"],
   "active": true
 }

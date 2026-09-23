@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "1",
   "id": "deskbits",
   "name": "Deskbits",
-  "tagline": "Đồ chơi công nghệ nhỏ cho góc làm việc vui hơn",
+  "tagline": "Tech decor gọn, vui và đủ hữu ích để bạn muốn để nó trên bàn mỗi ngày.",
   "currency": "VND",
   "locale": "vi-VN",
   "contact": {
@@ -22,6 +22,12 @@
         "name": "Giao hàng tiêu chuẩn",
         "fee": 30000
       }
-    ]
+    ],
+    "bankTransfer": {
+      "bankName": "Example Bank",
+      "accountName": "DESKBITS",
+      "accountNumber": "0123456789",
+      "transferNotePrefix": "DON"
+    }
   }
 }

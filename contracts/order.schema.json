@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://commerce-core.local/contracts/order.schema.json",
+  "title": "commerce-core Public Order v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "orderId",
+    "status",
+    "paymentStatus",
+    "fulfillmentStatus",
+    "total",
+    "currency",
+    "createdAt"
+  ],
+  "properties": {
+    "orderId": { "type": "string" },
+    "status": { "enum": ["pending_payment", "payment_failed", "confirmed", "cancelled"] },
+    "paymentStatus": { "enum": ["unpaid", "paid", "failed", "refunded"] },
+    "fulfillmentStatus": { "enum": ["new", "preparing", "shipping", "completed", "cancelled"] },
+    "total": { "type": "integer", "minimum": 0 },
+    "currency": { "const": "VND" },
+    "createdAt": { "type": "string", "format": "date-time" }
+  }
+}

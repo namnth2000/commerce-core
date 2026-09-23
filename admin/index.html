@@ -9,107 +9,238 @@
 <body>
   <header class="topbar">
     <a class="brand" href="./">commerce-core</a>
-    <span class="mode">Admin prototype v0.1</span>
+    <nav class="tabs" aria-label="Admin">
+      <button class="tab is-active" type="button" data-view="products">Sản phẩm</button>
+      <button class="tab" type="button" data-view="orders">Đơn hàng</button>
+      <button class="tab" type="button" data-view="settings">Cửa hàng</button>
+    </nav>
+    <button class="text-button" id="logoutButton" type="button">Đăng xuất</button>
   </header>
 
-  <main class="shell">
-    <aside class="sidebar">
-      <div class="sidebar-head">
-        <div>
-          <h1>Sản phẩm</h1>
-          <p>Catalog demo lưu trên trình duyệt</p>
-        </div>
-        <button class="icon-button" id="newProductButton" type="button" aria-label="Thêm sản phẩm">+</button>
-      </div>
-      <div id="productList" class="product-list"></div>
-    </aside>
-
-    <section class="editor">
-      <div class="editor-head">
-        <div>
-          <h2 id="editorTitle">Chỉnh sản phẩm</h2>
-          <p id="editorHint">Thay đổi dữ liệu rồi lưu bản nháp</p>
-        </div>
-        <span class="status-chip" id="saveState">Chưa thay đổi</span>
-      </div>
-
-      <form id="productForm">
-        <div class="field-row">
-          <label class="field">
-            <span>Tên sản phẩm</span>
-            <input id="nameInput" name="name" required>
-          </label>
-          <label class="field">
-            <span>Slug</span>
-            <input id="slugInput" name="slug" required pattern="[a-z0-9-]+">
-          </label>
-        </div>
-
-        <label class="field">
-          <span>Giá</span>
-          <div class="money-input">
-            <input id="priceInput" name="price" type="number" min="0" step="1000" required>
-            <span>VND</span>
+  <main class="page">
+    <section class="view is-active" id="productsView">
+      <aside class="panel product-sidebar">
+        <div class="panel-head">
+          <div>
+            <h1>Sản phẩm</h1>
+            <p>Catalog production từ GitHub</p>
           </div>
-        </label>
+          <button class="square-button" id="newProductButton" type="button" aria-label="Thêm sản phẩm">+</button>
+        </div>
+        <div id="productList" class="product-list"></div>
+      </aside>
 
-        <label class="field">
-          <span>Mô tả</span>
-          <textarea id="descriptionInput" name="description" rows="5"></textarea>
-        </label>
+      <section class="panel editor">
+        <div class="panel-head">
+          <div>
+            <h2 id="editorTitle">Chỉnh sản phẩm</h2>
+            <p>Draft tạo preview riêng, Publish cập nhật production</p>
+          </div>
+          <span class="status-chip" id="saveState">Sẵn sàng</span>
+        </div>
 
-        <label class="check-row">
-          <input id="activeInput" name="active" type="checkbox">
-          <span>Đang bán</span>
-        </label>
-
-        <section class="image-section">
-          <div class="section-copy">
-            <h3>Ảnh sản phẩm</h3>
-            <p>Ảnh được resize tối đa 1600px và chuyển sang WebP trước khi chuẩn bị publish</p>
+        <form id="productForm" class="form">
+          <div class="field-grid">
+            <label class="field">
+              <span>Tên sản phẩm</span>
+              <input id="nameInput" required>
+            </label>
+            <label class="field">
+              <span>Slug</span>
+              <input id="slugInput" required pattern="[a-z0-9-]+">
+            </label>
           </div>
 
-          <label class="upload-zone" for="imageInput">
-            <input id="imageInput" type="file" accept="image/*">
-            <strong>Chọn ảnh</strong>
-            <span>JPG, PNG hoặc WebP</span>
+          <label class="field">
+            <span>Giá</span>
+            <div class="money-input">
+              <input id="priceInput" type="number" min="0" step="1000" required>
+              <span>VND</span>
+            </div>
           </label>
 
-          <div class="image-result" id="imageResult" hidden>
-            <img id="imagePreview" alt="Ảnh sản phẩm sau khi tối ưu">
-            <div class="image-meta">
-              <div>
-                <span>Trước</span>
-                <strong id="originalSize">-</strong>
-              </div>
-              <div>
-                <span>Sau</span>
-                <strong id="optimizedSize">-</strong>
-              </div>
-              <div>
-                <span>Kích thước</span>
-                <strong id="optimizedDimensions">-</strong>
+          <label class="field">
+            <span>Mô tả</span>
+            <textarea id="descriptionInput" rows="5"></textarea>
+          </label>
+
+          <label class="check-row">
+            <input id="activeInput" type="checkbox">
+            <span>Đang bán</span>
+          </label>
+
+          <section class="image-section">
+            <div>
+              <h3>Ảnh sản phẩm</h3>
+              <p>Resize tối đa 1600px, WebP quality 0.82 trước khi gửi Worker.</p>
+            </div>
+
+            <label class="upload-zone" for="imageInput">
+              <input id="imageInput" type="file" accept="image/*">
+              <strong>Chọn ảnh</strong>
+              <span>JPG, PNG hoặc WebP</span>
+            </label>
+
+            <div class="image-result" id="imageResult" hidden>
+              <img id="imagePreview" alt="Ảnh sau tối ưu">
+              <div class="image-meta">
+                <div><span>Trước</span><strong id="originalSize">-</strong></div>
+                <div><span>Sau</span><strong id="optimizedSize">-</strong></div>
+                <div><span>Kích thước</span><strong id="optimizedDimensions">-</strong></div>
               </div>
             </div>
-            <button class="secondary-button" id="downloadImageButton" type="button">Tải ảnh đã tối ưu</button>
-          </div>
-        </section>
+          </section>
 
-        <div class="actions">
-          <button class="secondary-button" id="exportButton" type="button">Xuất JSON</button>
-          <div class="actions-right">
-            <button class="secondary-button" id="saveDraftButton" type="submit">Lưu bản nháp</button>
+          <div class="actions">
+            <button class="secondary-button" id="saveDraftButton" type="button">Lưu bản nháp</button>
+            <button class="secondary-button" id="previewButton" type="button">Preview</button>
             <button class="primary-button" id="publishButton" type="button">Publish</button>
           </div>
-        </div>
-      </form>
+        </form>
 
-      <div class="notice" id="notice" role="status" aria-live="polite">
-        v0.1 chưa kết nối GitHub. Lưu bản nháp dùng localStorage, Publish sẽ xuất file JSON để bạn kiểm tra contract.
-      </div>
+        <div class="notice" id="productNotice" role="status" aria-live="polite"></div>
+      </section>
+    </section>
+
+    <section class="view" id="ordersView">
+      <section class="panel wide-panel">
+        <div class="panel-head">
+          <div>
+            <h1>Đơn hàng</h1>
+            <p>Dữ liệu transaction trong D1</p>
+          </div>
+          <div class="head-actions">
+            <button class="secondary-button" id="exportOrdersButton" type="button">Xuất CSV</button>
+            <button class="secondary-button" id="refreshOrdersButton" type="button">Làm mới</button>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div><span>Tổng đơn</span><strong id="ordersMetric">0</strong></div>
+          <div><span>Doanh thu đã thanh toán</span><strong id="revenueMetric">0đ</strong></div>
+          <div><span>Đơn đang xử lý</span><strong id="openOrdersMetric">0</strong></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Đơn</th>
+                <th>Khách</th>
+                <th>Tổng</th>
+                <th>Thanh toán</th>
+                <th>Giao hàng</th>
+                <th>Ngày tạo</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+
+        <div class="notice" id="ordersNotice" role="status" aria-live="polite"></div>
+      </section>
+    </section>
+
+    <section class="view" id="settingsView">
+      <section class="panel settings-panel">
+        <div class="panel-head">
+          <div>
+            <h1>Cửa hàng</h1>
+            <p>Thông tin public và phương thức checkout</p>
+          </div>
+          <span class="status-chip" id="settingsState">Sẵn sàng</span>
+        </div>
+
+        <form id="settingsForm" class="form">
+          <div class="field-grid">
+            <label class="field">
+              <span>Tên cửa hàng</span>
+              <input id="storeNameInput" required>
+            </label>
+            <label class="field">
+              <span>Số điện thoại</span>
+              <input id="storePhoneInput" required>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Tagline</span>
+            <input id="storeTaglineInput">
+          </label>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Email</span>
+              <input id="storeEmailInput" type="email">
+            </label>
+            <label class="field">
+              <span>Địa chỉ</span>
+              <input id="storeAddressInput">
+            </label>
+          </div>
+
+          <fieldset>
+            <legend>Thanh toán</legend>
+            <div class="checks">
+              <label class="check-row"><input id="paymentCodInput" type="checkbox"><span>COD</span></label>
+              <label class="check-row"><input id="paymentBankInput" type="checkbox"><span>Chuyển khoản</span></label>
+              <label class="check-row"><input id="paymentPayosInput" type="checkbox"><span>PayOS</span></label>
+            </div>
+          </fieldset>
+
+          <section class="subsection">
+            <h3>Thông tin chuyển khoản</h3>
+            <div class="field-grid">
+              <label class="field"><span>Ngân hàng</span><input id="bankNameInput"></label>
+              <label class="field"><span>Chủ tài khoản</span><input id="bankAccountNameInput"></label>
+            </div>
+            <div class="field-grid">
+              <label class="field"><span>Số tài khoản</span><input id="bankAccountNumberInput"></label>
+              <label class="field"><span>Prefix nội dung</span><input id="bankPrefixInput" maxlength="20"></label>
+            </div>
+          </section>
+
+          <section class="subsection">
+            <h3>Vận chuyển V1</h3>
+            <div class="field-grid">
+              <label class="field"><span>Tên phương thức</span><input id="shippingNameInput" required></label>
+              <label class="field">
+                <span>Phí</span>
+                <div class="money-input">
+                  <input id="shippingFeeInput" type="number" min="0" step="1000" required>
+                  <span>VND</span>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <div class="actions">
+            <button class="secondary-button" id="saveSettingsDraftButton" type="button">Lưu bản nháp</button>
+            <button class="primary-button" id="publishSettingsButton" type="button">Publish</button>
+          </div>
+        </form>
+
+        <div class="notice" id="settingsNotice" role="status" aria-live="polite"></div>
+      </section>
     </section>
   </main>
 
+  <dialog id="loginDialog">
+    <form id="loginForm" class="login-form">
+      <div>
+        <h2>Đăng nhập Admin</h2>
+        <p>Mật khẩu được gửi tới Worker qua HTTPS. GitHub và PayOS secrets không nằm trong browser.</p>
+      </div>
+      <label class="field">
+        <span>Mật khẩu</span>
+        <input id="passwordInput" type="password" required autocomplete="current-password">
+      </label>
+      <button class="primary-button" type="submit">Đăng nhập</button>
+      <p class="login-error" id="loginError" role="status"></p>
+    </form>
+  </dialog>
+
+  <script src="./config.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

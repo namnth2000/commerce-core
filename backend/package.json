@@ -1,0 +1,22 @@
+{
+  "name": "commerce-core-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config wrangler.toml",
+    "deploy": "wrangler deploy --config wrangler.toml",
+    "types": "wrangler types --config wrangler.toml",
+    "db:migrate:local": "wrangler d1 migrations apply commerce-core --local --config wrangler.toml",
+    "db:migrate:remote": "wrangler d1 migrations apply commerce-core --remote --config wrangler.toml",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@payos/node": "^2.0.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.0.0"
+  }
+}

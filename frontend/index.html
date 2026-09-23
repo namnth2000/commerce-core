@@ -12,13 +12,13 @@
     <a class="logo" href="./">Deskbits</a>
     <nav>
       <a href="#products">Sản phẩm</a>
-      <button class="cart-button" id="cartButton" type="button">
-        Giỏ hàng <span id="cartCount">0</span>
-      </button>
+      <button class="cart-button" id="cartButton" type="button">Giỏ hàng <span id="cartCount">0</span></button>
     </nav>
   </header>
 
   <main>
+    <div class="status-banner" id="statusBanner" hidden></div>
+
     <section class="intro">
       <div>
         <h1>Đồ chơi nhỏ cho bàn làm việc bớt nhàm chán</h1>
@@ -38,20 +38,12 @@
 
   <aside class="cart-panel" id="cartPanel" aria-hidden="true">
     <div class="cart-head">
-      <div>
-        <h2>Giỏ hàng</h2>
-        <p id="cartSummary">Chưa có sản phẩm</p>
-      </div>
+      <div><h2>Giỏ hàng</h2><p id="cartSummary">Chưa có sản phẩm</p></div>
       <button class="close-button" id="closeCartButton" type="button" aria-label="Đóng giỏ hàng">×</button>
     </div>
-
     <div class="cart-items" id="cartItems"></div>
-
     <div class="cart-footer">
-      <div class="total-row">
-        <span>Tạm tính</span>
-        <strong id="cartTotal">0đ</strong>
-      </div>
+      <div class="total-row"><span>Tạm tính</span><strong id="cartTotal">0đ</strong></div>
       <button class="primary-button" id="checkoutButton" type="button">Checkout</button>
     </div>
   </aside>
@@ -61,53 +53,22 @@
   <dialog id="checkoutDialog">
     <form id="checkoutForm">
       <div class="dialog-head">
-        <div>
-          <h2>Thông tin nhận hàng</h2>
-          <p>Đây là checkout demo, chưa tạo đơn thật.</p>
-        </div>
+        <div><h2>Thông tin nhận hàng</h2><p>Tổng cuối cùng sẽ được xác nhận bởi commerce-core.</p></div>
         <button class="close-button" id="closeCheckoutButton" type="button" aria-label="Đóng">×</button>
       </div>
-
-      <label>
-        <span>Họ tên</span>
-        <input name="name" required autocomplete="name">
-      </label>
-
-      <label>
-        <span>Số điện thoại</span>
-        <input name="phone" required inputmode="tel" autocomplete="tel">
-      </label>
-
-      <label>
-        <span>Địa chỉ</span>
-        <textarea name="address" rows="3" required autocomplete="street-address"></textarea>
-      </label>
-
-      <label>
-        <span>Thanh toán</span>
-        <select name="paymentMethod" id="paymentSelect"></select>
-      </label>
-
-      <label>
-        <span>Vận chuyển</span>
-        <select name="shippingMethod" id="shippingSelect"></select>
-      </label>
-
-      <div class="checkout-total">
-        <span>Tổng dự kiến</span>
-        <strong id="checkoutTotal">0đ</strong>
-      </div>
-
-      <button class="primary-button" type="submit">Đặt đơn thử</button>
-      <p class="checkout-result" id="checkoutResult" role="status"></p>
+      <label><span>Họ tên</span><input name="name" required autocomplete="name"></label>
+      <label><span>Số điện thoại</span><input name="phone" required inputmode="tel" autocomplete="tel"></label>
+      <label><span>Địa chỉ</span><textarea name="address" rows="3" required autocomplete="street-address"></textarea></label>
+      <label><span>Thanh toán</span><select name="paymentMethod" id="paymentSelect"></select></label>
+      <label><span>Vận chuyển</span><select name="shippingMethod" id="shippingSelect"></select></label>
+      <div class="checkout-total"><span>Tổng dự kiến</span><strong id="checkoutTotal">0đ</strong></div>
+      <button class="primary-button" id="submitCheckoutButton" type="submit">Đặt hàng</button>
+      <div class="checkout-result" id="checkoutResult" role="status"></div>
     </form>
   </dialog>
 
-  <footer>
-    <span>Deskbits demo storefront</span>
-    <span>commerce-core contract v0.1</span>
-  </footer>
-
+  <footer><span>Deskbits</span><span>Powered by commerce-core v1</span></footer>
+  <script src="./config.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 [
   {
-    "schemaVersion": "0.1",
+    "schemaVersion": "1",
     "id": "pixel-clock-mini",
     "slug": "pixel-clock-mini",
     "name": "Pixel Clock Mini",
@@ -12,7 +12,7 @@
     "active": true
   },
   {
-    "schemaVersion": "0.1",
+    "schemaVersion": "1",
     "id": "magnetic-cable-dock",
     "slug": "magnetic-cable-dock",
     "name": "Magnetic Cable Dock",
@@ -24,7 +24,7 @@
     "active": true
   },
   {
-    "schemaVersion": "0.1",
+    "schemaVersion": "1",
     "id": "ambient-light-bar",
     "slug": "ambient-light-bar",
     "name": "Ambient Light Bar",
@@ -36,7 +36,7 @@
     "active": true
   },
   {
-    "schemaVersion": "0.1",
+    "schemaVersion": "1",
     "id": "switch-fidget-pad",
     "slug": "switch-fidget-pad",
     "name": "Switch Fidget Pad",
@@ -48,7 +48,7 @@
     "active": true
   },
   {
-    "schemaVersion": "0.1",
+    "schemaVersion": "1",
     "id": "aluminum-headphone-stand",
     "slug": "aluminum-headphone-stand",
     "name": "Aluminum Headphone Stand",
@@ -60,7 +60,7 @@
     "active": true
   },
   {
-    "schemaVersion": "0.1",
+    "schemaVersion": "1",
     "id": "mini-desk-vacuum",
     "slug": "mini-desk-vacuum",
     "name": "Mini Desk Vacuum",
