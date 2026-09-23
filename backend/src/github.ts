@@ -73,7 +73,7 @@ async function readTextFile(env: Env, path: string, branch: string): Promise<{ t
   return { text: decodeBase64Utf8(body.content), sha: body.sha };
 }
 
-async function fileSha(env: Env, path: string, branch: string): Promise<string | null> {
+async function readFile(env: Env, path: string, branch: string): Promise<ContentResponse | null> {
   const [owner, repo] = repoParts(env);
   const response = await githubFetch(
     env,
@@ -85,7 +85,11 @@ async function fileSha(env: Env, path: string, branch: string): Promise<string |
     throw new HttpError(response.status, "GITHUB_READ_FAILED", "Could not inspect " + path + " on GitHub.");
   }
 
-  return (await response.json<ContentResponse>()).sha;
+  return await response.json<ContentResponse>();
+}
+
+async function fileSha(env: Env, path: string, branch: string): Promise<string | null> {
+  return (await readFile(env, path, branch))?.sha || null;
 }
 
 async function putBase64File(
@@ -244,8 +248,10 @@ export async function saveProduct(
 
   if (input.mode === "draft") await ensureBranch(env, branch);
 
-  if (input.image) {
-    const imagePath = IMAGE_ROOT + "/" + input.image.filename;
+  const imageFilename = input.product.images?.[0]?.split("/").pop() || null;
+  const imagePath = imageFilename ? IMAGE_ROOT + "/" + imageFilename : null;
+
+  if (input.image && imagePath) {
     await putBase64File(
       env,
       imagePath,
@@ -253,6 +259,29 @@ export async function saveProduct(
       branch,
       `content: update image for ${input.product.slug}`
     );
+  } else if (input.mode === "publish" && imagePath) {
+    const productionImage = await readFile(env, imagePath, env.GITHUB_MAIN_BRANCH);
+
+    if (!productionImage) {
+      const draftBranch = safeDraftName(input.product.slug);
+      const draftImage = await readFile(env, imagePath, draftBranch);
+
+      if (!draftImage) {
+        throw new HttpError(
+          409,
+          "PRODUCT_IMAGE_MISSING",
+          "Product image is not available on production or the product draft. Upload the image again before publishing."
+        );
+      }
+
+      await putBase64File(
+        env,
+        imagePath,
+        draftImage.content.replace(/\s/g, ""),
+        env.GITHUB_MAIN_BRANCH,
+        `content: publish image for ${input.product.slug}`
+      );
+    }
   }
 
   const productsFile = await readTextFile(env, PRODUCTS_PATH, branch);
