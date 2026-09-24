@@ -1,11 +1,13 @@
 const config = window.COMMERCE_STOREFRONT_CONFIG || {};
 const API_BASE = String(config.apiBase || "http://localhost:8787").replace(/\/$/, "");
 
-const state = { store: null, products: [], cart: loadCart() };
+const state = { store: null, products: [], cart: loadCart(), filter: "all", sort: "default" };
 
 const el = {
   grid: document.querySelector("#productGrid"),
   tagline: document.querySelector("#storeTagline"),
+  filters: [...document.querySelectorAll(".filter-button")],
+  sort: document.querySelector("#sortSelect"),
   statusBanner: document.querySelector("#statusBanner"),
   cartButton: document.querySelector("#cartButton"),
   cartCount: document.querySelector("#cartCount"),
@@ -36,6 +38,8 @@ async function init() {
 
     state.store = await storeResponse.json();
     state.products = (await productsResponse.json()).filter((product) => product.active);
+    state.cart = state.cart.filter((item) => state.products.some((product) => product.id === item.productId));
+    persistCart();
     document.title = state.store.name;
     document.querySelector(".logo").textContent = state.store.name;
     el.tagline.textContent = state.store.tagline || "";
@@ -49,22 +53,43 @@ async function init() {
 }
 
 function renderProducts() {
+  const filtered = state.products.filter((product) =>
+    state.filter === "all" || (product.tags || []).includes(state.filter)
+  );
+  if (state.sort === "price-asc") filtered.sort((a, b) => a.price - b.price);
+  else if (state.sort === "price-desc") filtered.sort((a, b) => b.price - a.price);
+  else if (state.sort === "name") filtered.sort((a, b) => a.name.localeCompare(b.name, "vi"));
   el.grid.innerHTML = "";
-  for (const product of state.products) {
+  if (!filtered.length) {
+    el.grid.innerHTML = '<p class="no-products">Chưa có sản phẩm trong danh mục này.</p>';
+    return;
+  }
+  for (const [index, product] of filtered.entries()) {
     const article = document.createElement("article");
     article.className = "product-card";
-    const image = product.images?.[0] || "./assets/product-placeholder.svg";
-    article.innerHTML = `
-      <div class="product-visual"><img src="${escapeAttribute(image)}" alt="${escapeAttribute(product.name)}" loading="lazy"></div>
-      <div class="product-info">
-        <div class="product-line"><h3>${escapeHtml(product.name)}</h3><span class="price">${money(product.price)}</span></div>
-        <p>${escapeHtml(product.description)}</p>
-        <button class="add-button" type="button">Thêm vào giỏ</button>
-      </div>
-    `;
+    const source = product.images?.[0] || "./assets/product-placeholder.svg";
+    article.innerHTML =
+      '<div class="product-visual"><img src="' + escapeAttribute(source) +
+      '" alt="' + escapeAttribute(product.name) + '" loading="' + (index < 4 ? "eager" : "lazy") +
+      '" decoding="async"></div>' +
+      '<div class="product-info"><h3>' + escapeHtml(product.name) + '</h3>' +
+      '<div class="product-actions"><span class="price">' + money(product.price) + '</span>' +
+      '<button class="add-button" type="button" aria-label="Thêm ' + escapeAttribute(product.name) +
+      ' vào giỏ" title="Thêm vào giỏ">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>' +
+      '</button></div></div>';
     article.querySelector(".add-button").addEventListener("click", () => addToCart(product.id));
     el.grid.appendChild(article);
   }
+}
+function setFilter(value) {
+  state.filter = value;
+  el.filters.forEach((button) => {
+    const active = button.dataset.filter === value;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  renderProducts();
 }
 
 function addToCart(productId) {
@@ -152,12 +177,16 @@ function renderCheckoutOptions() {
 function openCart() {
   el.cartPanel.classList.add("open");
   el.cartPanel.setAttribute("aria-hidden", "false");
+  el.cartPanel.inert = false;
+  el.closeCart.focus();
   el.backdrop.hidden = false;
 }
 
 function closeCart() {
   el.cartPanel.classList.remove("open");
   el.cartPanel.setAttribute("aria-hidden", "true");
+  el.cartPanel.inert = true;
+  el.cartButton.focus();
   el.backdrop.hidden = true;
 }
 
@@ -274,6 +303,9 @@ function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (char) => 
 function escapeAttribute(value) { return escapeHtml(value); }
 
 el.cartButton.addEventListener("click", openCart);
+el.filters.forEach((button) => button.addEventListener("click", () => setFilter(button.dataset.filter)));
+el.sort.addEventListener("change", () => { state.sort = el.sort.value; renderProducts(); });
+document.addEventListener("keydown", (event) => { if (event.key === "Escape" && el.cartPanel.classList.contains("open")) closeCart(); });
 el.closeCart.addEventListener("click", closeCart);
 el.backdrop.addEventListener("click", closeCart);
 el.checkoutButton.addEventListener("click", openCheckout);

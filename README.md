@@ -46,7 +46,7 @@ commerce-core/
 ├── backend/     Cloudflare Worker + D1
 ├── contracts/   Store, product, order and API v1 contracts
 ├── docs/        Product, architecture, deployment and security
-└── frontend/    Deskbits demo storefront + AI storefront skill
+└── frontend/    DeskJoy demo storefront + AI storefront skill
 ```
 
 ## Local start

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1",
   "id": "deskbits",
-  "name": "Deskbits",
-  "tagline": "Tech decor gọn, vui và đủ hữu ích để bạn muốn để nó trên bàn mỗi ngày.",
+  "name": "DeskJoy",
+  "tagline": "Đồ decor và đồ chơi công nghệ cho dân văn phòng.",
   "currency": "VND",
   "locale": "vi-VN",
   "contact": {
@@ -15,7 +15,10 @@
     "tiktok": null
   },
   "checkout": {
-    "paymentMethods": ["cod", "bank_transfer"],
+    "paymentMethods": [
+      "cod",
+      "bank_transfer"
+    ],
     "shippingMethods": [
       {
         "id": "standard",

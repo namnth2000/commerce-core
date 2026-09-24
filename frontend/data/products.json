@@ -1,74 +1,273 @@
 [
   {
     "schemaVersion": "1",
-    "id": "pixel-clock-mini",
-    "slug": "pixel-clock-mini",
-    "name": "Pixel Clock Mini",
-    "description": "Đồng hồ pixel nhỏ gọn, đủ sáng để nhìn giờ nhưng không chiếm sự chú ý.",
-    "price": 489000,
+    "id": "groot-planter",
+    "slug": "groot-planter",
+    "name": "Chậu cây decor Groot",
+    "description": "Chậu cây trang trí hình Groot.",
+    "price": 295000,
     "compareAtPrice": null,
-    "images": ["./assets/pixel-clock.svg"],
-    "tags": ["desk", "decor"],
+    "images": [
+      "./assets/products/groot-planter.webp"
+    ],
+    "tags": [
+      "decor",
+      "accessory"
+    ],
     "active": true
   },
   {
     "schemaVersion": "1",
-    "id": "magnetic-cable-dock",
-    "slug": "magnetic-cable-dock",
-    "name": "Magnetic Cable Dock",
-    "description": "Giữ dây sạc đúng chỗ bằng nam châm, lấy ra bằng một tay khi cần.",
-    "price": 179000,
+    "id": "monitor-light-bar",
+    "slug": "monitor-light-bar",
+    "name": "Đèn LED màn hình Baseus i-Wok Series",
+    "description": "Đèn LED gắn màn hình.",
+    "price": 890000,
     "compareAtPrice": null,
-    "images": ["./assets/cable-dock.svg"],
-    "tags": ["desk", "utility"],
+    "images": [
+      "./assets/products/monitor-light-bar.webp"
+    ],
+    "tags": [
+      "tech",
+      "desk"
+    ],
     "active": true
   },
   {
     "schemaVersion": "1",
-    "id": "ambient-light-bar",
-    "slug": "ambient-light-bar",
-    "name": "Ambient Light Bar",
-    "description": "Thanh sáng nhỏ đặt sau màn hình để góc làm việc dịu hơn vào buổi tối.",
-    "price": 699000,
+    "id": "keychron-keyboard",
+    "slug": "keychron-keyboard",
+    "name": "Bàn phím cơ Keychron K2",
+    "description": "Bàn phím cơ không dây.",
+    "price": 2390000,
     "compareAtPrice": null,
-    "images": ["./assets/light-bar.svg"],
-    "tags": ["light", "decor"],
+    "images": [
+      "./assets/products/keychron-keyboard.webp"
+    ],
+    "tags": [
+      "tech",
+      "desk"
+    ],
     "active": true
   },
   {
     "schemaVersion": "1",
-    "id": "switch-fidget-pad",
-    "slug": "switch-fidget-pad",
-    "name": "Switch Fidget Pad",
-    "description": "Bốn switch cơ để bấm khi đang nghĩ, họp hoặc chờ build chạy xong.",
-    "price": 259000,
+    "id": "ergonomic-mouse",
+    "slug": "ergonomic-mouse",
+    "name": "Chuột không dây Logitech MX Master 3S",
+    "description": "Chuột không dây dành cho bàn làm việc.",
+    "price": 2590000,
     "compareAtPrice": null,
-    "images": ["./assets/switch-pad.svg"],
-    "tags": ["toy", "desk"],
+    "images": [
+      "./assets/products/ergonomic-mouse.webp"
+    ],
+    "tags": [
+      "tech",
+      "desk"
+    ],
     "active": true
   },
   {
     "schemaVersion": "1",
-    "id": "aluminum-headphone-stand",
-    "slug": "aluminum-headphone-stand",
-    "name": "Aluminum Headphone Stand",
-    "description": "Giá treo tai nghe bằng nhôm, footprint nhỏ và giữ mặt bàn thoáng hơn.",
-    "price": 399000,
+    "id": "wireless-headphones",
+    "slug": "wireless-headphones",
+    "name": "Tai nghe không dây Sony WH-1000XM5",
+    "description": "Tai nghe không dây.",
+    "price": 6990000,
     "compareAtPrice": null,
-    "images": ["./assets/headphone-stand.svg"],
-    "tags": ["desk", "utility"],
+    "images": [
+      "./assets/products/wireless-headphones.webp"
+    ],
+    "tags": [
+      "tech",
+      "accessory"
+    ],
     "active": true
   },
   {
     "schemaVersion": "1",
-    "id": "mini-desk-vacuum",
-    "slug": "mini-desk-vacuum",
-    "name": "Mini Desk Vacuum",
-    "description": "Máy hút bụi mini cho vụn bánh, bụi bàn phím và những thứ nhỏ khó chịu.",
-    "price": 329000,
+    "id": "desk-lamp",
+    "slug": "desk-lamp",
+    "name": "Đèn bàn LED Baseus",
+    "description": "Đèn LED để bàn.",
+    "price": 590000,
     "compareAtPrice": null,
-    "images": ["./assets/desk-vacuum.svg"],
-    "tags": ["utility", "toy"],
+    "images": [
+      "./assets/products/desk-lamp.webp"
+    ],
+    "tags": [
+      "tech",
+      "desk"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "pegboard",
+    "slug": "pegboard",
+    "name": "Bảng treo đồ đa năng Pegboard",
+    "description": "Bảng treo và sắp xếp phụ kiện.",
+    "price": 490000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/pegboard.webp"
+    ],
+    "tags": [
+      "desk",
+      "accessory"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "laptop-stand",
+    "slug": "laptop-stand",
+    "name": "Giá đỡ laptop nhôm",
+    "description": "Giá đỡ laptop bằng nhôm.",
+    "price": 350000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/laptop-stand.webp"
+    ],
+    "tags": [
+      "desk",
+      "accessory"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "desk-clock",
+    "slug": "desk-clock",
+    "name": "Đồng hồ LED để bàn",
+    "description": "Đồng hồ điện tử để bàn.",
+    "price": 320000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/desk-clock.webp"
+    ],
+    "tags": [
+      "decor",
+      "tech"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "desktop-plant",
+    "slug": "desktop-plant",
+    "name": "Cây xanh để bàn",
+    "description": "Chậu cây xanh trang trí bàn làm việc.",
+    "price": 150000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/desktop-plant.webp"
+    ],
+    "tags": [
+      "decor",
+      "accessory"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "pen-holder",
+    "slug": "pen-holder",
+    "name": "Hộp bút để bàn",
+    "description": "Hộp đựng bút tối giản.",
+    "price": 120000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/pen-holder.webp"
+    ],
+    "tags": [
+      "desk",
+      "accessory"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "charging-dock",
+    "slug": "charging-dock",
+    "name": "Đế sạc không dây 3in1",
+    "description": "Đế sạc không dây nhiều thiết bị.",
+    "price": 690000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/charging-dock.webp"
+    ],
+    "tags": [
+      "tech",
+      "accessory"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "office-chair",
+    "slug": "office-chair",
+    "name": "Ghế công thái học",
+    "description": "Ghế ngồi làm việc.",
+    "price": 2990000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/office-chair.webp"
+    ],
+    "tags": [
+      "desk"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "monitor-riser",
+    "slug": "monitor-riser",
+    "name": "Kệ nâng màn hình",
+    "description": "Kệ nâng màn hình và sắp xếp bàn.",
+    "price": 390000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/monitor-riser.webp"
+    ],
+    "tags": [
+      "desk",
+      "accessory"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "astronaut-lamp",
+    "slug": "astronaut-lamp",
+    "name": "Đèn decor phi hành gia",
+    "description": "Đèn trang trí hình phi hành gia.",
+    "price": 450000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/astronaut-lamp.webp"
+    ],
+    "tags": [
+      "decor",
+      "tech"
+    ],
+    "active": true
+  },
+  {
+    "schemaVersion": "1",
+    "id": "wood-monitor-riser",
+    "slug": "wood-monitor-riser",
+    "name": "Kệ màn hình để bàn",
+    "description": "Kệ gỗ để màn hình và đồ dùng.",
+    "price": 590000,
+    "compareAtPrice": null,
+    "images": [
+      "./assets/products/wood-monitor-riser.webp"
+    ],
+    "tags": [
+      "desk",
+      "decor"
+    ],
     "active": true
   }
 ]
