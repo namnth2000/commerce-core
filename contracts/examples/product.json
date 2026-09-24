@@ -1,12 +1,17 @@
 {
   "schemaVersion": "1",
-  "id": "pixel-clock-mini",
-  "slug": "pixel-clock-mini",
-  "name": "Pixel Clock Mini",
-  "description": "Đồng hồ pixel nhỏ gọn để bàn.",
-  "price": 489000,
+  "id": "groot-planter",
+  "slug": "groot-planter",
+  "name": "Chậu cây decor Groot",
+  "description": "Chậu cây trang trí hình Groot.",
+  "price": 295000,
   "compareAtPrice": null,
-  "images": ["./assets/pixel-clock.svg"],
-  "tags": ["desk", "decor"],
+  "images": [
+    "./assets/products/groot-planter.webp"
+  ],
+  "tags": [
+    "decor",
+    "accessory"
+  ],
   "active": true
 }

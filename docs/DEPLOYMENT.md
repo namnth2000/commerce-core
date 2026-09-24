@@ -17,7 +17,7 @@ Build output directory: frontend
 After deployment, note the production URL, for example:
 
 ```text
-https://deskbits.pages.dev
+https://deskjoy.pages.dev
 ```
 
 Cloudflare Pages automatically creates preview deployments for non-production branches. Branch aliases are used by Admin Portal after Save draft.

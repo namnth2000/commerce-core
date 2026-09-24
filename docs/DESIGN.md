@@ -59,3 +59,5 @@ Direction:
 - prioritize product browsing and cart behavior
 
 The storefront is an example, not the permanent visual identity for all future stores.
+
+Detail page: preserve the white DeskJoy product-first aesthetic; thumbnails beneath hero photo, purchase actions next to product copy on desktop and stacked on mobile. No promotional hero, invented reviews or badges.

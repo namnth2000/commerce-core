@@ -19,8 +19,9 @@ orders / payments / fulfillment
 Included:
 
 - Git-backed product and store publishing
+- product detail pages with image galleries
 - Draft branch + Cloudflare Pages preview workflow
-- client-side WebP image optimization
+- client-side WebP image optimization and up to 10 reorderable photos per product
 - real D1 order storage
 - server-authoritative checkout totals
 - COD
@@ -62,6 +63,7 @@ Open:
 ```text
 http://localhost:8000/admin/
 http://localhost:8000/frontend/
+http://localhost:8000/frontend/product.html?slug=groot-planter
 ```
 
 Then start the Worker:

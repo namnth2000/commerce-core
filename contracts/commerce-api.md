@@ -12,9 +12,9 @@ Request:
 
 ```json
 {
-  "storeId": "deskbits",
+  "storeId": "deskjoy",
   "items": [
-    { "productId": "pixel-clock-mini", "quantity": 1 }
+    { "productId": "groot-planter", "quantity": 1 }
   ],
   "customer": {
     "name": "Nguyen Van A",
@@ -35,9 +35,9 @@ Success:
   "orderId": "ORD-20260923-A1B2C3D4",
   "orderToken": "random-private-token",
   "status": "confirmed",
-  "subtotal": 489000,
+  "subtotal": 295000,
   "shippingFee": 30000,
-  "total": 519000,
+  "total": 325000,
   "currency": "VND",
   "payment": {
     "type": "none"
