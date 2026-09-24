@@ -8,7 +8,8 @@ const state = {
   products: [],
   orders: [],
   selectedId: null,
-  optimizedImage: null
+  productImages: [],
+  selectionRevision: 0
 };
 
 const el = {
@@ -33,11 +34,8 @@ const el = {
   description: document.querySelector("#descriptionInput"),
   active: document.querySelector("#activeInput"),
   imageInput: document.querySelector("#imageInput"),
-  imageResult: document.querySelector("#imageResult"),
-  imagePreview: document.querySelector("#imagePreview"),
-  originalSize: document.querySelector("#originalSize"),
-  optimizedSize: document.querySelector("#optimizedSize"),
-  optimizedDimensions: document.querySelector("#optimizedDimensions"),
+  imageList: document.querySelector("#imageList"),
+  imageCount: document.querySelector("#imageCount"),
   saveDraft: document.querySelector("#saveDraftButton"),
   preview: document.querySelector("#previewButton"),
   publish: document.querySelector("#publishButton"),
@@ -155,8 +153,6 @@ function renderProductList() {
     button.innerHTML = `<strong>${escapeHtml(product.name)}</strong><span>${money(product.price)} · ${product.active ? "Đang bán" : "Ẩn"}</span>`;
     button.addEventListener("click", () => {
       state.selectedId = product.id;
-      state.optimizedImage = null;
-      el.imageResult.hidden = true;
       fillProduct();
       renderProductList();
     });
@@ -175,6 +171,7 @@ function fillProduct() {
   el.active.checked = Boolean(product.active);
   el.editorTitle.textContent = product.name;
   el.saveState.textContent = "Sẵn sàng";
+  resetProductImages(product.images || []);
 }
 
 function newProduct() {
@@ -195,7 +192,6 @@ function newProduct() {
 
   state.products.unshift(product);
   state.selectedId = tempId;
-  state.optimizedImage = null;
   renderProductList();
   fillProduct();
   el.name.focus();
@@ -204,16 +200,14 @@ function newProduct() {
 function readProduct() {
   const current = currentProduct();
   if (!current) throw new Error("Chưa chọn sản phẩm.");
-
   const slug = el.slug.value.trim();
   if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
     throw new Error("Slug chỉ được dùng chữ thường, số và dấu gạch nối.");
   }
-
   const id = current._new ? slug : current.id;
-  const filename = slug + "-01.webp";
-  const images = state.optimizedImage ? ["./assets/products/" + filename] : current.images;
-
+  const images = state.productImages.map((image) => image.src);
+  const uploads = state.productImages.filter((image) => image.upload).map((image) => image.upload);
+  if (images.length > 10) throw new Error("Tối đa 10 ảnh cho một sản phẩm.");
   return {
     product: {
       schemaVersion: "1",
@@ -227,12 +221,12 @@ function readProduct() {
       tags: current.tags || [],
       active: el.active.checked
     },
-    image: state.optimizedImage ? { filename, contentBase64: state.optimizedImage.base64 } : null
+    images: uploads
   };
 }
 
 async function saveProduct(mode, openPreview = false) {
-  const { product, image } = readProduct();
+  const { product, images } = readProduct();
 
   if (!product.name) throw new Error("Tên sản phẩm không được để trống.");
   if (state.products.some((item) => item.id !== state.selectedId && item.slug === product.slug)) {
@@ -245,14 +239,12 @@ async function saveProduct(mode, openPreview = false) {
   try {
     const result = await api("/api/v1/admin/products/save", {
       method: "POST",
-      body: JSON.stringify({ mode, product, image })
+      body: JSON.stringify({ mode, product, images })
     });
 
     const index = state.products.findIndex((item) => item.id === state.selectedId);
     state.products[index] = product;
     state.selectedId = product.id;
-    state.optimizedImage = null;
-    el.imageResult.hidden = true;
     renderProductList();
     fillProduct();
 
@@ -275,35 +267,96 @@ function setProductBusy(busy) {
   el.saveState.textContent = busy ? "Đang xử lý" : "Sẵn sàng";
 }
 
+function resetProductImages(sources) {
+  state.selectionRevision++;
+  for (const image of state.productImages) if (image.previewUrl) URL.revokeObjectURL(image.previewUrl);
+  state.productImages = sources.map((src) => ({ src, previewUrl: null, upload: null }));
+  renderProductImages();
+}
+
+function renderProductImages() {
+  el.imageList.innerHTML = "";
+  el.imageCount.textContent = state.productImages.length + "/10";
+  for (const [index, image] of state.productImages.entries()) {
+    const row = document.createElement("div");
+    row.className = "image-row";
+    const preview = document.createElement("img");
+    preview.src = image.previewUrl || image.src;
+    preview.alt = "Ảnh sản phẩm " + (index + 1);
+    preview.loading = "lazy";
+    row.appendChild(preview);
+    const info = document.createElement("div");
+    info.className = "image-row-info";
+    const name = document.createElement("strong");
+    name.textContent = index === 0 ? "Ảnh bìa" : "Ảnh " + (index + 1);
+    const meta = document.createElement("span");
+    meta.textContent = image.upload
+      ? formatBytes(image.originalSize) + " → " + formatBytes(image.optimizedSize) + " · WebP " + image.width + " × " + image.height
+      : "Ảnh đã có";
+    info.append(name, meta);
+    row.appendChild(info);
+    const actions = document.createElement("div");
+    actions.className = "image-row-actions";
+    const action = (label, handler, disabled) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.disabled = disabled;
+      button.setAttribute("aria-label", label + " ảnh " + (index + 1));
+      button.addEventListener("click", handler);
+      actions.appendChild(button);
+    };
+    action("Lên", () => moveProductImage(index, index - 1), index === 0);
+    action("Xuống", () => moveProductImage(index, index + 1), index === state.productImages.length - 1);
+    if (index > 0) action("Đặt bìa", () => moveProductImage(index, 0), false);
+    action("Xoá", () => {
+      const removed = state.productImages.splice(index, 1)[0];
+      if (removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+      renderProductImages();
+    }, false);
+    row.appendChild(actions);
+    el.imageList.appendChild(row);
+  }
+}
+
+function moveProductImage(from, to) {
+  if (to < 0 || to >= state.productImages.length) return;
+  state.productImages.splice(to, 0, state.productImages.splice(from, 1)[0]);
+  renderProductImages();
+}
+
 async function optimizeImage(file) {
+  if (!file.type.startsWith("image/")) throw new Error("Chỉ hỗ trợ file ảnh.");
   const bitmap = await createImageBitmap(file);
-  const maxDimension = 1600;
-  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-
-  const context = canvas.getContext("2d", { alpha: false });
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, width, height);
-  context.drawImage(bitmap, 0, 0, width, height);
-
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.82));
-  if (!blob) throw new Error("Không thể tạo WebP.");
-  if (blob.size > 1_500_000) throw new Error("Ảnh sau tối ưu vẫn lớn hơn 1.5 MB.");
-
-  const base64 = await blobToBase64(blob);
-  state.optimizedImage = { blob, base64, width, height };
-
-  el.imagePreview.src = URL.createObjectURL(blob);
-  el.originalSize.textContent = formatBytes(file.size);
-  el.optimizedSize.textContent = formatBytes(blob.size);
-  el.optimizedDimensions.textContent = width + " × " + height;
-  el.imageResult.hidden = false;
-  showNotice(el.productNotice, "Ảnh đã được tối ưu. Ảnh gốc không được gửi lên Git.");
+  try {
+    const maxDimension = 1600;
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) throw new Error("Không thể xử lý ảnh trên thiết bị này.");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.82));
+    if (!blob) throw new Error("Không thể tạo WebP.");
+    if (blob.size > 1_500_000) throw new Error("Ảnh sau tối ưu vẫn lớn hơn 1.5 MB.");
+    const filename = (slugify(el.slug.value || el.name.value) || "product") + "-" +
+      crypto.randomUUID().replace(/-/g, "").slice(0, 12) + ".webp";
+    return {
+      src: "./assets/products/" + filename,
+      upload: { filename, contentBase64: await blobToBase64(blob) },
+      previewUrl: URL.createObjectURL(blob),
+      originalSize: file.size,
+      optimizedSize: blob.size,
+      width, height
+    };
+  } finally {
+    bitmap.close();
+  }
 }
 
 function blobToBase64(blob) {
@@ -533,9 +586,32 @@ el.name.addEventListener("input", () => {
   if (product?._new) el.slug.value = slugify(el.name.value);
 });
 el.imageInput.addEventListener("change", async () => {
-  const file = el.imageInput.files?.[0];
-  if (!file) return;
-  try { await optimizeImage(file); } catch (error) { showNotice(el.productNotice, error.message); }
+  const files = Array.from(el.imageInput.files || []);
+  el.imageInput.value = "";
+  if (!files.length) return;
+  if (files.length + state.productImages.length > 10) {
+    showNotice(el.productNotice, "Tối đa 10 ảnh. Hãy xoá ảnh không cần trước khi thêm.");
+    return;
+  }
+  const revision = state.selectionRevision;
+  el.imageInput.disabled = true;
+  showNotice(el.productNotice, "Đang tối ưu " + files.length + " ảnh...");
+  try {
+    for (const file of files) {
+      const image = await optimizeImage(file);
+      if (revision !== state.selectionRevision) {
+        URL.revokeObjectURL(image.previewUrl);
+        return;
+      }
+      state.productImages.push(image);
+      renderProductImages();
+    }
+    showNotice(el.productNotice, "Đã tối ưu " + files.length + " ảnh. Chọn Lưu bản nháp hoặc Publish để lưu.");
+  } catch (error) {
+    showNotice(el.productNotice, error.message || "Không thể xử lý ảnh. Các ảnh đã tối ưu vẫn được giữ.");
+  } finally {
+    el.imageInput.disabled = false;
+  }
 });
 el.saveDraft.addEventListener("click", () => saveProduct("draft").catch((error) => showNotice(el.productNotice, error.message)));
 el.preview.addEventListener("click", () => saveProduct("draft", true).catch((error) => showNotice(el.productNotice, error.message)));
