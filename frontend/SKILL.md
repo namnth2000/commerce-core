@@ -82,7 +82,7 @@ Do not treat `payment=success` by itself as proof of payment. The Worker updates
 
 ## Visual freedom
 
-DeskJoy detail pages use `product.html?slug=<slug>`. The first image is the cover; remaining images render in the gallery. Both pages share the same cart and checkout flow.
+DeskJoy detail pages use `product.html?slug=<slug>`. The first image is the cover; remaining images render in the gallery. The Admin sends an `images` upload array, with filenames matching the product's referenced paths. Both pages share the same cart and checkout flow.
 
 You may change typography, layout, product card, navigation, product detail presentation, motion, color system and responsive composition.
 

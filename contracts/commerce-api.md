@@ -85,6 +85,8 @@ GET   /admin/summary
 PATCH /admin/orders/{orderId}
 ```
 
+Product save request uses an `images` array of `{ filename, contentBase64 }` uploads. The product's `images` list defines cover/order; upload filenames must match referenced paths. A product supports up to 10 images, each optimized to WebP and at most 1.5 MB. Older clients may still send one `image` object. On publish, missing images are copied from the product draft to production before updating catalog JSON.
+
 GitHub credentials remain Worker secrets and are never returned to the browser.
 
 ## Error shape
