@@ -1,6 +1,7 @@
 const config = window.COMMERCE_ADMIN_CONFIG || {};
 const API_BASE = String(config.apiBase || "http://localhost:8787").replace(/\/$/, "");
 const SESSION_KEY = "commerce-core-admin-session-v1";
+const STOREFRONT_BASE = new URL(String(config.storefrontBase || "../frontend/"), location.href);
 
 const state = {
   token: sessionStorage.getItem(SESSION_KEY),
@@ -281,7 +282,7 @@ function renderProductImages() {
     const row = document.createElement("div");
     row.className = "image-row";
     const preview = document.createElement("img");
-    preview.src = image.previewUrl || image.src;
+    preview.src = image.previewUrl || new URL(image.src.replace(/^\.\//, ""), STOREFRONT_BASE).href;
     preview.alt = "Ảnh sản phẩm " + (index + 1);
     preview.loading = "lazy";
     row.appendChild(preview);

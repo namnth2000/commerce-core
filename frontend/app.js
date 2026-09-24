@@ -371,14 +371,14 @@ function paymentLabel(method) {
   return ({ cod: "Thanh toán khi nhận hàng", bank_transfer: "Chuyển khoản", payos: "PayOS" })[method] || method;
 }
 function money(value) { return new Intl.NumberFormat("vi-VN").format(Number(value) || 0) + "đ"; }
-function loadCart() { try { return JSON.parse(localStorage.getItem("deskbits-cart-v1") || "[]"); } catch { return []; } }
-function persistCart() { localStorage.setItem("deskbits-cart-v1", JSON.stringify(state.cart)); }
+function loadCart() { try { return JSON.parse(localStorage.getItem("deskjoy-cart-v1") || "[]"); } catch { return []; } }
+function persistCart() { localStorage.setItem("deskjoy-cart-v1", JSON.stringify(state.cart)); }
 function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char])); }
 function escapeAttribute(value) { return escapeHtml(value); }
 
 el.cartButton.addEventListener("click", openCart);
 el.filters.forEach((button) => button.addEventListener("click", () => setFilter(button.dataset.filter)));
-el.sort.addEventListener("change", () => { state.sort = el.sort.value; renderProducts(); });
+if (el.sort) el.sort.addEventListener("change", () => { state.sort = el.sort.value; renderProducts(); });
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && el.cartPanel.classList.contains("open")) closeCart(); });
 el.closeCart.addEventListener("click", closeCart);
 el.backdrop.addEventListener("click", closeCart);

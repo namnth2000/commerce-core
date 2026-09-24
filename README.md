@@ -113,7 +113,7 @@ So a GitHub token is **not required** for:
 - Preview
 - Publish
 
-See `docs/DEPLOYMENT.md` for the full setup.
+See `docs/DEPLOYMENT.md` for the full setup. For a separately deployed Admin Portal, set `storefrontBase` in `admin/config.js` to the storefront URL so product thumbnails load.
 
 ## Deploy
 

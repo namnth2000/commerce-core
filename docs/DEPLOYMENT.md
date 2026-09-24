@@ -133,6 +133,8 @@ frontend/config.js
 
 Set each `apiBase` to the deployed Worker URL.
 
+In `admin/config.js`, also set `storefrontBase` to the storefront base URL, for example `https://deskjoy.pages.dev/`. This is used to preview existing product images on the separate Admin Pages project.
+
 For local testing both default to `http://localhost:8787`.
 
 ## 8. Deploy Worker secrets
