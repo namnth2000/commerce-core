@@ -71,24 +71,15 @@
 
           <section class="image-section">
             <div>
-              <h3>Ảnh sản phẩm</h3>
-              <p>Resize tối đa 1600px, WebP quality 0.82 trước khi gửi Worker.</p>
+              <h3>Ảnh sản phẩm <span id="imageCount">0/10</span></h3>
+              <p>Ảnh đầu tiên là ảnh bìa. Tối đa 10 ảnh, tự nén WebP (1600px, quality 0.82). Có thể đổi thứ tự hoặc xoá trước khi lưu.</p>
             </div>
-
             <label class="upload-zone" for="imageInput">
-              <input id="imageInput" type="file" accept="image/*">
-              <strong>Chọn ảnh</strong>
-              <span>JPG, PNG hoặc WebP</span>
+              <input id="imageInput" type="file" accept="image/*" multiple>
+              <strong>Thêm ảnh sản phẩm</strong>
+              <span>Chọn một hoặc nhiều ảnh JPG, PNG, WebP</span>
             </label>
-
-            <div class="image-result" id="imageResult" hidden>
-              <img id="imagePreview" alt="Ảnh sau tối ưu">
-              <div class="image-meta">
-                <div><span>Trước</span><strong id="originalSize">-</strong></div>
-                <div><span>Sau</span><strong id="optimizedSize">-</strong></div>
-                <div><span>Kích thước</span><strong id="optimizedDimensions">-</strong></div>
-              </div>
-            </div>
+            <div class="image-list" id="imageList" aria-live="polite"></div>
           </section>
 
           <div class="actions">

@@ -12,9 +12,9 @@ Request:
 
 ```json
 {
-  "storeId": "deskbits",
+  "storeId": "deskjoy",
   "items": [
-    { "productId": "pixel-clock-mini", "quantity": 1 }
+    { "productId": "groot-planter", "quantity": 1 }
   ],
   "customer": {
     "name": "Nguyen Van A",
@@ -35,9 +35,9 @@ Success:
   "orderId": "ORD-20260923-A1B2C3D4",
   "orderToken": "random-private-token",
   "status": "confirmed",
-  "subtotal": 489000,
+  "subtotal": 295000,
   "shippingFee": 30000,
-  "total": 519000,
+  "total": 325000,
   "currency": "VND",
   "payment": {
     "type": "none"
@@ -84,6 +84,8 @@ GET   /admin/orders
 GET   /admin/summary
 PATCH /admin/orders/{orderId}
 ```
+
+Product save request uses an `images` array of `{ filename, contentBase64 }` uploads. The product's `images` list defines cover/order; upload filenames must match referenced paths. A product supports up to 10 images, each optimized to WebP and at most 1.5 MB. Older clients may still send one `image` object. On publish, missing images are copied from the product draft to production before updating catalog JSON.
 
 GitHub credentials remain Worker secrets and are never returned to the browser.
 

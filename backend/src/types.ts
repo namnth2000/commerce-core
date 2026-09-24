@@ -81,13 +81,17 @@ export interface Catalog {
   products: Product[];
 }
 
+export interface ProductImageUpload {
+  filename: string;
+  contentBase64: string;
+}
+
 export interface AdminProductSaveRequest {
   mode: "draft" | "publish";
   product: Product;
-  image?: {
-    filename: string;
-    contentBase64: string;
-  } | null;
+  images?: ProductImageUpload[];
+  /** Backwards compatibility with older single-image clients. */
+  image?: ProductImageUpload | null;
 }
 
 export interface AdminStoreSaveRequest {

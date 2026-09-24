@@ -35,6 +35,7 @@ Git stays underneath the experience. The merchant sees Draft, Preview and Publis
 
 ```text
 Browse
+-> product detail and image gallery
 -> cart
 -> checkout
 -> shipping
@@ -49,7 +50,7 @@ Browse
 
 - store settings in Git
 - products in Git
-- product image compression in Admin Portal
+- product image compression in Admin Portal, up to 10 images per product
 - GitHub-backed draft and production publishing
 - Cloudflare Pages branch preview link
 

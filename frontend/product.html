@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DeskJoy - đồ decor và đồ chơi công nghệ cho dân văn phòng.">
+  <title>Sản phẩm | DeskJoy</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="./" aria-label="DeskJoy - trang chủ">DeskJoy</a>
+    <button class="cart-button" id="cartButton" type="button" aria-label="Mở giỏ hàng" aria-controls="cartPanel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+      <span class="cart-count" id="cartCount" aria-hidden="true">0</span>
+    </button>
+  </header>
+
+  <main class="detail-main">
+    <div class="status-banner" id="statusBanner" role="status" hidden></div>
+    <div id="productDetail" aria-live="polite"></div>
+    <section class="related-section" id="relatedSection" hidden>
+      <h2>Sản phẩm liên quan</h2>
+      <div class="product-grid" id="relatedGrid"></div>
+    </section>
+  </main>
+
+  <aside class="cart-panel" id="cartPanel" aria-hidden="true" aria-label="Giỏ hàng" inert>
+    <div class="cart-head">
+      <div><h2>Giỏ hàng</h2><p id="cartSummary">Chưa có sản phẩm</p></div>
+      <button class="close-button" id="closeCartButton" type="button" aria-label="Đóng giỏ hàng">×</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div class="total-row"><span>Tạm tính</span><strong id="cartTotal">0đ</strong></div>
+      <button class="primary-button" id="checkoutButton" type="button">Thanh toán</button>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop" hidden></div>
+
+  <dialog id="checkoutDialog">
+    <form id="checkoutForm">
+      <div class="dialog-head">
+        <div><h2>Thông tin nhận hàng</h2><p>Tổng cuối cùng được xác nhận bởi commerce-core.</p></div>
+        <button class="close-button" id="closeCheckoutButton" type="button" aria-label="Đóng">×</button>
+      </div>
+      <label><span>Họ tên</span><input name="name" required autocomplete="name"></label>
+      <label><span>Số điện thoại</span><input name="phone" required inputmode="tel" autocomplete="tel"></label>
+      <label><span>Địa chỉ</span><textarea name="address" rows="3" required autocomplete="street-address"></textarea></label>
+      <label><span>Thanh toán</span><select name="paymentMethod" id="paymentSelect"></select></label>
+      <label><span>Vận chuyển</span><select name="shippingMethod" id="shippingSelect"></select></label>
+      <div class="checkout-total"><span>Tổng dự kiến</span><strong id="checkoutTotal">0đ</strong></div>
+      <button class="primary-button" id="submitCheckoutButton" type="submit">Đặt hàng</button>
+      <div class="checkout-result" id="checkoutResult" role="status"></div>
+    </form>
+  </dialog>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

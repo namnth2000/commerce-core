@@ -1,10 +1,14 @@
 const config = window.COMMERCE_STOREFRONT_CONFIG || {};
 const API_BASE = String(config.apiBase || "http://localhost:8787").replace(/\/$/, "");
+const CART_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"21\" r=\"1\"/><circle cx=\"20\" cy=\"21\" r=\"1\"/><path d=\"M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6\"/></svg>";
 
 const state = { store: null, products: [], cart: loadCart(), filter: "all", sort: "default" };
 
 const el = {
   grid: document.querySelector("#productGrid"),
+  detail: document.querySelector("#productDetail"),
+  related: document.querySelector("#relatedSection"),
+  relatedGrid: document.querySelector("#relatedGrid"),
   tagline: document.querySelector("#storeTagline"),
   filters: [...document.querySelectorAll(".filter-button")],
   sort: document.querySelector("#sortSelect"),
@@ -42,20 +46,39 @@ async function init() {
     persistCart();
     document.title = state.store.name;
     document.querySelector(".logo").textContent = state.store.name;
-    el.tagline.textContent = state.store.tagline || "";
-    renderProducts();
+    if (el.tagline) el.tagline.textContent = state.store.tagline || "";
+    if (el.detail) renderProductDetail();
+    else renderProducts();
     renderCheckoutOptions();
     renderCart();
     await handlePaymentReturn();
   } catch (error) {
-    el.grid.innerHTML = `<p class="empty-cart">${escapeHtml(error.message || "Không thể tải cửa hàng.")}</p>`;
+    const target = el.detail || el.grid;
+    if (target) target.innerHTML = `<p class="no-products">${escapeHtml(error.message || "Không thể tải cửa hàng.")}</p>`;
   }
 }
 
+function productUrl(product) {
+  return "./product.html?slug=" + encodeURIComponent(product.slug);
+}
+function createProductCard(product, index = 4) {
+  const article = document.createElement("article");
+  article.className = "product-card";
+  const source = product.images?.[0] || "./assets/product-placeholder.svg";
+  const href = escapeAttribute(productUrl(product));
+  article.innerHTML =
+    '<a class="product-visual product-link" href="' + href + '" aria-label="Xem ' + escapeAttribute(product.name) + '">' +
+    '<img src="' + escapeAttribute(source) + '" alt="' + escapeAttribute(product.name) + '" loading="' + (index < 4 ? "eager" : "lazy") + '" decoding="async"></a>' +
+    '<div class="product-info"><h3><a class="product-title-link" href="' + href + '">' + escapeHtml(product.name) + '</a></h3>' +
+    '<div class="product-actions"><span class="price">' + money(product.price) + '</span>' +
+    '<button class="add-button" type="button" aria-label="Thêm ' + escapeAttribute(product.name) + ' vào giỏ" title="Thêm vào giỏ">' +
+    CART_ICON + '</button></div></div>';
+  article.querySelector(".add-button").addEventListener("click", () => addToCart(product.id));
+  return article;
+}
 function renderProducts() {
-  const filtered = state.products.filter((product) =>
-    state.filter === "all" || (product.tags || []).includes(state.filter)
-  );
+  if (!el.grid) return;
+  const filtered = state.products.filter((product) => state.filter === "all" || (product.tags || []).includes(state.filter));
   if (state.sort === "price-asc") filtered.sort((a, b) => a.price - b.price);
   else if (state.sort === "price-desc") filtered.sort((a, b) => b.price - a.price);
   else if (state.sort === "name") filtered.sort((a, b) => a.name.localeCompare(b.name, "vi"));
@@ -64,22 +87,71 @@ function renderProducts() {
     el.grid.innerHTML = '<p class="no-products">Chưa có sản phẩm trong danh mục này.</p>';
     return;
   }
-  for (const [index, product] of filtered.entries()) {
-    const article = document.createElement("article");
-    article.className = "product-card";
-    const source = product.images?.[0] || "./assets/product-placeholder.svg";
-    article.innerHTML =
-      '<div class="product-visual"><img src="' + escapeAttribute(source) +
-      '" alt="' + escapeAttribute(product.name) + '" loading="' + (index < 4 ? "eager" : "lazy") +
-      '" decoding="async"></div>' +
-      '<div class="product-info"><h3>' + escapeHtml(product.name) + '</h3>' +
-      '<div class="product-actions"><span class="price">' + money(product.price) + '</span>' +
-      '<button class="add-button" type="button" aria-label="Thêm ' + escapeAttribute(product.name) +
-      ' vào giỏ" title="Thêm vào giỏ">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>' +
-      '</button></div></div>';
-    article.querySelector(".add-button").addEventListener("click", () => addToCart(product.id));
-    el.grid.appendChild(article);
+  filtered.forEach((product, index) => el.grid.appendChild(createProductCard(product, index)));
+}
+function renderProductDetail() {
+  const slug = new URLSearchParams(location.search).get("slug");
+  const product = state.products.find((item) => item.slug === slug);
+  if (!product) {
+    document.title = "Không tìm thấy sản phẩm | " + state.store.name;
+    el.detail.innerHTML = '<div class="detail-not-found"><h1>Không tìm thấy sản phẩm</h1><p>Sản phẩm có thể đã bị ẩn hoặc đường dẫn không chính xác.</p><a href="./">Quay lại cửa hàng</a></div>';
+    return;
+  }
+  document.title = product.name + " | " + state.store.name;
+  const meta = document.querySelector('meta[name="description"]');
+  if (meta) meta.setAttribute("content", product.description || product.name);
+  const images = product.images?.length ? product.images : ["./assets/product-placeholder.svg"];
+  let quantity = 1;
+  el.detail.innerHTML =
+    '<nav class="breadcrumbs" aria-label="Đường dẫn"><a href="./">Trang chủ</a><span aria-hidden="true">/</span><span>' + escapeHtml(product.name) + '</span></nav>' +
+    '<section class="detail-layout"><div class="detail-gallery">' +
+      '<div class="detail-photo"><img id="detailMainImage" src="' + escapeAttribute(images[0]) + '" alt="' + escapeAttribute(product.name) + '" decoding="async"></div>' +
+      '<div class="detail-thumbnails" id="detailThumbnails" role="group" aria-label="Ảnh sản phẩm"></div></div>' +
+    '<div class="detail-content"><h1>' + escapeHtml(product.name) + '</h1><div class="detail-price">' + money(product.price) + '</div>' +
+      '<div class="detail-purchase"><div class="detail-quantity" aria-label="Số lượng">' +
+        '<button id="detailDecrease" type="button" aria-label="Giảm số lượng">−</button>' +
+        '<output id="detailQuantity" aria-live="polite">1</output>' +
+        '<button id="detailIncrease" type="button" aria-label="Tăng số lượng">+</button></div>' +
+        '<button id="detailAdd" class="detail-add" type="button">' + CART_ICON + '<span>Thêm vào giỏ hàng</span></button></div>' +
+      '<div class="detail-information"><h2>Thông tin sản phẩm</h2><p>' + escapeHtml(product.description || "Thông tin sản phẩm đang được cập nhật.") + '</p></div>' +
+    '</div></section>';
+  const mainImage = el.detail.querySelector("#detailMainImage");
+  const thumbnailList = el.detail.querySelector("#detailThumbnails");
+  images.forEach((src, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "detail-thumb";
+    button.setAttribute("aria-label", "Xem ảnh " + (index + 1) + " của " + product.name);
+    button.setAttribute("aria-pressed", String(index === 0));
+    button.innerHTML = '<img src="' + escapeAttribute(src) + '" alt="" loading="lazy">';
+    button.addEventListener("click", () => {
+      mainImage.src = images[index];
+      mainImage.alt = product.name + " - ảnh " + (index + 1);
+      thumbnailList.querySelectorAll("button").forEach((thumb, n) => thumb.setAttribute("aria-pressed", String(n === index)));
+    });
+    thumbnailList.appendChild(button);
+  });
+  if (images.length < 2) thumbnailList.hidden = true;
+  const count = el.detail.querySelector("#detailQuantity");
+  const minus = el.detail.querySelector("#detailDecrease");
+  const plus = el.detail.querySelector("#detailIncrease");
+  function updateQuantity(next) {
+    quantity = Math.max(1, Math.min(99, next));
+    count.textContent = String(quantity);
+    minus.disabled = quantity === 1;
+    plus.disabled = quantity === 99;
+  }
+  minus.addEventListener("click", () => updateQuantity(quantity - 1));
+  plus.addEventListener("click", () => updateQuantity(quantity + 1));
+  el.detail.querySelector("#detailAdd").addEventListener("click", () => addToCart(product.id, quantity));
+  updateQuantity(1);
+  const related = state.products.filter((item) => item.id !== product.id)
+    .map((item, index) => ({ item, index, shared: (item.tags || []).filter((tag) => (product.tags || []).includes(tag)).length }))
+    .sort((a, b) => b.shared - a.shared || a.index - b.index).slice(0, 4);
+  el.related.hidden = related.length === 0;
+  if (related.length) {
+    el.relatedGrid.innerHTML = "";
+    related.forEach(({ item }) => el.relatedGrid.appendChild(createProductCard(item)));
   }
 }
 function setFilter(value) {
@@ -92,10 +164,11 @@ function setFilter(value) {
   renderProducts();
 }
 
-function addToCart(productId) {
+function addToCart(productId, quantity = 1) {
+  if (!state.products.some((product) => product.id === productId)) return;
   const item = state.cart.find((entry) => entry.productId === productId);
-  if (item) item.quantity += 1;
-  else state.cart.push({ productId, quantity: 1 });
+  if (item) item.quantity = Math.min(99, item.quantity + quantity);
+  else state.cart.push({ productId, quantity: Math.min(99, quantity) });
   persistCart();
   renderCart();
   openCart();
@@ -104,7 +177,7 @@ function addToCart(productId) {
 function changeQuantity(productId, delta) {
   const item = state.cart.find((entry) => entry.productId === productId);
   if (!item) return;
-  item.quantity += delta;
+  item.quantity = Math.min(99, item.quantity + delta);
   if (item.quantity <= 0) state.cart = state.cart.filter((entry) => entry.productId !== productId);
   persistCart();
   renderCart();
@@ -297,14 +370,14 @@ function paymentLabel(method) {
   return ({ cod: "Thanh toán khi nhận hàng", bank_transfer: "Chuyển khoản", payos: "PayOS" })[method] || method;
 }
 function money(value) { return new Intl.NumberFormat("vi-VN").format(Number(value) || 0) + "đ"; }
-function loadCart() { try { return JSON.parse(localStorage.getItem("deskbits-cart-v1") || "[]"); } catch { return []; } }
-function persistCart() { localStorage.setItem("deskbits-cart-v1", JSON.stringify(state.cart)); }
+function loadCart() { try { return JSON.parse(localStorage.getItem("deskjoy-cart-v1") || "[]"); } catch { return []; } }
+function persistCart() { localStorage.setItem("deskjoy-cart-v1", JSON.stringify(state.cart)); }
 function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char])); }
 function escapeAttribute(value) { return escapeHtml(value); }
 
 el.cartButton.addEventListener("click", openCart);
 el.filters.forEach((button) => button.addEventListener("click", () => setFilter(button.dataset.filter)));
-el.sort.addEventListener("change", () => { state.sort = el.sort.value; renderProducts(); });
+if (el.sort) el.sort.addEventListener("change", () => { state.sort = el.sort.value; renderProducts(); });
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && el.cartPanel.classList.contains("open")) closeCart(); });
 el.closeCart.addEventListener("click", closeCart);
 el.backdrop.addEventListener("click", closeCart);

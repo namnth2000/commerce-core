@@ -17,7 +17,7 @@ Build output directory: frontend
 After deployment, note the production URL, for example:
 
 ```text
-https://deskbits.pages.dev
+https://deskjoy.pages.dev
 ```
 
 Cloudflare Pages automatically creates preview deployments for non-production branches. Branch aliases are used by Admin Portal after Save draft.
@@ -132,6 +132,8 @@ frontend/config.js
 ```
 
 Set each `apiBase` to the deployed Worker URL.
+
+In `admin/config.js`, also set `storefrontBase` to the storefront base URL, for example `https://deskjoy.pages.dev/`. This is used to preview existing product images on the separate Admin Pages project.
 
 For local testing both default to `http://localhost:8787`.
 

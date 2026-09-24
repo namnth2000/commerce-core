@@ -133,7 +133,12 @@ Admin Portal:
 - accepts browser-readable images
 - resizes the largest dimension to at most 1600px
 - re-encodes to WebP at quality 0.82
-- rejects publish payloads over 1.5 MB after optimization
+- rejects each optimized image over 1.5 MB
+- supports up to 10 images per product, preserving order; first image is the cover
+- uploads all referenced images before publishing product JSON
+- copies missing draft images to production during Publish
+
+Removing an image from a product removes its catalog reference; v1 does not automatically delete the old Git asset. A later cleanup may remove unreferenced files.
 
 New product images are stored under:
 

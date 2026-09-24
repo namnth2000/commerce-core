@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1",
-  "id": "deskbits",
+  "id": "deskjoy",
   "name": "DeskJoy",
   "tagline": "Đồ decor và đồ chơi công nghệ cho dân văn phòng.",
   "currency": "VND",
@@ -28,7 +28,7 @@
     ],
     "bankTransfer": {
       "bankName": "Example Bank",
-      "accountName": "DESKBITS",
+      "accountName": "DESKJOY",
       "accountNumber": "0123456789",
       "transferNotePrefix": "DON"
     }

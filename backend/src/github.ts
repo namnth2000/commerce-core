@@ -182,16 +182,33 @@ function previewUrl(env: Env, branch: string): string | null {
   return `https://${alias}.${env.PAGES_PROJECT_NAME}.pages.dev`;
 }
 
-function validateImage(image: AdminProductSaveRequest["image"]): void {
-  if (!image) return;
-  if (!/^[a-z0-9-]+\.webp$/i.test(image.filename)) {
-    throw new HttpError(400, "INVALID_IMAGE", "Product image must be a WebP file with a safe filename.");
-  }
+const MANAGED_IMAGE = /^\.\/assets\/products\/([a-z0-9-]+\.webp)$/;
 
-  const approximateBytes = Math.floor(image.contentBase64.length * 0.75);
-  if (approximateBytes > 1_500_000) {
-    throw new HttpError(413, "IMAGE_TOO_LARGE", "Optimized product image must be 1.5 MB or smaller.");
+function validateUploads(input: AdminProductSaveRequest): Array<{ filename: string; contentBase64: string }> {
+  const uploads = input.images ?? (input.image ? [input.image] : []);
+  if (!Array.isArray(uploads) || uploads.length > 10) {
+    throw new HttpError(400, "INVALID_IMAGE", "A product can upload at most 10 images.");
   }
+  const seen = new Set<string>();
+  for (const image of uploads) {
+    if (!image || typeof image.filename !== "string" ||
+        !/^[a-z0-9-]+\.webp$/.test(image.filename) ||
+        typeof image.contentBase64 !== "string" || !image.contentBase64 ||
+        !/^[a-zA-Z0-9+/]+={0,2}$/.test(image.contentBase64) ||
+        image.contentBase64.length % 4 !== 0 ||
+        seen.has(image.filename)) {
+      throw new HttpError(400, "INVALID_IMAGE", "Invalid or duplicate WebP image upload.");
+    }
+    seen.add(image.filename);
+    const approximateBytes = Math.floor(image.contentBase64.length * 0.75);
+    if (approximateBytes > 1_500_000) {
+      throw new HttpError(413, "IMAGE_TOO_LARGE", "Each optimized image must be 1.5 MB or smaller.");
+    }
+    if (!input.product.images.includes("./assets/products/" + image.filename)) {
+      throw new HttpError(400, "INVALID_IMAGE", "An uploaded image must be referenced by this product.");
+    }
+  }
+  return uploads;
 }
 
 function assertProduct(product: Product): void {
@@ -202,7 +219,11 @@ function assertProduct(product: Product): void {
     !/^[a-z0-9][a-z0-9-]*$/.test(product.slug) ||
     !product.name ||
     !Number.isInteger(product.price) ||
-    product.price < 0
+    product.price < 0 ||
+    !Array.isArray(product.images) ||
+    product.images.length > 10 ||
+    product.images.some((src) => typeof src !== "string" || !src.trim()) ||
+    new Set(product.images).size !== product.images.length
   ) {
     throw new HttpError(400, "INVALID_PRODUCT", "Product does not match the v1 contract.");
   }
@@ -228,65 +249,50 @@ export async function saveProduct(
   input: AdminProductSaveRequest
 ): Promise<{ branch: string; previewUrl: string | null }> {
   assertProduct(input.product);
-  validateImage(input.image);
-
-  const branch = input.mode === "publish"
-    ? env.GITHUB_MAIN_BRANCH
-    : safeDraftName(input.product.slug);
-
+  if (input.mode !== "draft" && input.mode !== "publish") {
+    throw new HttpError(400, "INVALID_MODE", "Choose draft or publish.");
+  }
+  const uploads = validateUploads(input);
+  const branch = input.mode === "publish" ? env.GITHUB_MAIN_BRANCH : safeDraftName(input.product.slug);
   if (input.mode === "draft") await ensureBranch(env, branch);
 
-  const imageFilename = input.product.images?.[0]?.split("/").pop() || null;
-  const imagePath = imageFilename ? IMAGE_ROOT + "/" + imageFilename : null;
+  // Upload first. Write catalog last so it never references an image that is not ready.
+  const uploaded = new Set<string>();
+  for (const image of uploads) {
+    const path = IMAGE_ROOT + "/" + image.filename;
+    await putBase64File(env, path, image.contentBase64, branch,
+      "content: update image for " + input.product.slug);
+    uploaded.add(path);
+  }
 
-  if (input.image && imagePath) {
-    await putBase64File(
-      env,
-      imagePath,
-      input.image.contentBase64,
-      branch,
-      `content: update image for ${input.product.slug}`
-    );
-  } else if (input.mode === "publish" && imagePath) {
-    const productionImage = await readFile(env, imagePath, env.GITHUB_MAIN_BRANCH);
-
-    if (!productionImage) {
-      const draftBranch = safeDraftName(input.product.slug);
-      const draftImage = await readFile(env, imagePath, draftBranch);
-
-      if (!draftImage) {
-        throw new HttpError(
-          409,
-          "PRODUCT_IMAGE_MISSING",
-          "Product image is not available on production or the product draft. Upload the image again before publishing."
-        );
-      }
-
-      await putBase64File(
-        env,
-        imagePath,
-        draftImage.content.replace(/\s/g, ""),
-        env.GITHUB_MAIN_BRANCH,
-        `content: publish image for ${input.product.slug}`
-      );
+  // An existing image may live on the product's draft branch (publish),
+  // or on main (when the draft branch pre-dates that image).
+  for (const src of input.product.images) {
+    const match = MANAGED_IMAGE.exec(src);
+    if (!match) continue;
+    const path = IMAGE_ROOT + "/" + match[1];
+    if (uploaded.has(path) || await readFile(env, path, branch)) continue;
+    const fallbackBranch = input.mode === "publish"
+      ? safeDraftName(input.product.slug)
+      : env.GITHUB_MAIN_BRANCH;
+    const fallback = await readFile(env, path, fallbackBranch);
+    if (!fallback) {
+      throw new HttpError(409, "PRODUCT_IMAGE_MISSING",
+        "A referenced image is missing. Re-upload it before saving or publishing.");
     }
+    await putBase64File(env, path, fallback.content.replace(/\s/g, ""), branch,
+      "content: publish image for " + input.product.slug);
   }
 
   const productsFile = await readTextFile(env, PRODUCTS_PATH, branch);
   const products = JSON.parse(productsFile.text) as Product[];
   const index = products.findIndex((product) => product.id === input.product.id);
-
   if (index >= 0) products[index] = input.product;
   else products.push(input.product);
 
-  await putTextFile(
-    env,
-    PRODUCTS_PATH,
-    JSON.stringify(products, null, 2) + "\n",
-    branch,
-    `content: ${input.mode === "publish" ? "publish" : "save draft"} ${input.product.slug}`
-  );
-
+  await putTextFile(env, PRODUCTS_PATH,
+    JSON.stringify(products, null, 2) + "\n", branch,
+    "content: " + (input.mode === "publish" ? "publish" : "save draft") + " " + input.product.slug);
   return {
     branch,
     previewUrl: input.mode === "draft" ? previewUrl(env, branch) : env.STOREFRONT_ORIGIN

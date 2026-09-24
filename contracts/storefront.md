@@ -24,7 +24,8 @@ Browse
 ## Product identity
 
 - `product.id` is canonical
-- `product.slug` is presentation/routing
+- `product.slug` is presentation/routing (DeskJoy uses `product.html?slug=<slug>`)
+- `product.images[0]` is the cover; remaining entries provide the gallery (maximum 10)
 - cart items contain only `productId` and `quantity`
 - browser prices are display values only
 
