@@ -108,7 +108,6 @@ function renderProductDetail() {
       '<div class="detail-photo"><img id="detailMainImage" src="' + escapeAttribute(images[0]) + '" alt="' + escapeAttribute(product.name) + '" decoding="async"></div>' +
       '<div class="detail-thumbnails" id="detailThumbnails" role="group" aria-label="Ảnh sản phẩm"></div></div>' +
     '<div class="detail-content"><h1>' + escapeHtml(product.name) + '</h1><div class="detail-price">' + money(product.price) + '</div>' +
-      '<p class="detail-description">' + escapeHtml(product.description || "Thông tin sản phẩm đang được cập nhật.") + '</p>' +
       '<div class="detail-purchase"><div class="detail-quantity" aria-label="Số lượng">' +
         '<button id="detailDecrease" type="button" aria-label="Giảm số lượng">−</button>' +
         '<output id="detailQuantity" aria-live="polite">1</output>' +

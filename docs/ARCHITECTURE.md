@@ -138,6 +138,8 @@ Admin Portal:
 - uploads all referenced images before publishing product JSON
 - copies missing draft images to production during Publish
 
+Removing an image from a product removes its catalog reference; v1 does not automatically delete the old Git asset. A later cleanup may remove unreferenced files.
+
 New product images are stored under:
 
 ```text

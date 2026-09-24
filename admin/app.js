@@ -10,7 +10,8 @@ const state = {
   orders: [],
   selectedId: null,
   productImages: [],
-  selectionRevision: 0
+  selectionRevision: 0,
+  assetBase: STOREFRONT_BASE
 };
 
 const el = {
@@ -154,6 +155,7 @@ function renderProductList() {
     button.innerHTML = `<strong>${escapeHtml(product.name)}</strong><span>${money(product.price)} · ${product.active ? "Đang bán" : "Ẩn"}</span>`;
     button.addEventListener("click", () => {
       state.selectedId = product.id;
+      state.assetBase = STOREFRONT_BASE;
       fillProduct();
       renderProductList();
     });
@@ -193,6 +195,7 @@ function newProduct() {
 
   state.products.unshift(product);
   state.selectedId = tempId;
+  state.assetBase = STOREFRONT_BASE;
   renderProductList();
   fillProduct();
   el.name.focus();
@@ -246,15 +249,19 @@ async function saveProduct(mode, openPreview = false) {
     const index = state.products.findIndex((item) => item.id === state.selectedId);
     state.products[index] = product;
     state.selectedId = product.id;
+    state.assetBase = mode === "draft" && result.previewUrl
+      ? new URL(result.previewUrl.replace(/\/$/, "") + "/") : STOREFRONT_BASE;
     renderProductList();
     fillProduct();
 
     if (mode === "draft") {
-      const link = result.previewUrl
-        ? ` <a href="${escapeAttribute(result.previewUrl)}" target="_blank" rel="noreferrer">Mở preview</a>`
+      const previewPage = result.previewUrl
+        ? result.previewUrl.replace(/\/$/, "") + "/product.html?slug=" + encodeURIComponent(product.slug) : null;
+      const link = previewPage
+        ? ` <a href="${escapeAttribute(previewPage)}" target="_blank" rel="noreferrer">Mở preview</a>`
         : "";
       el.productNotice.innerHTML = "Đã lưu draft." + link;
-      if (openPreview && result.previewUrl) window.open(result.previewUrl, "_blank", "noopener");
+      if (openPreview && previewPage) window.open(previewPage, "_blank", "noopener");
     } else {
       showNotice(el.productNotice, "Đã publish lên production branch. Cloudflare Pages sẽ deploy commit mới.");
     }
@@ -282,7 +289,7 @@ function renderProductImages() {
     const row = document.createElement("div");
     row.className = "image-row";
     const preview = document.createElement("img");
-    preview.src = image.previewUrl || new URL(image.src.replace(/^\.\//, ""), STOREFRONT_BASE).href;
+    preview.src = image.previewUrl || new URL(image.src.replace(/^\.\//, ""), state.assetBase).href;
     preview.alt = "Ảnh sản phẩm " + (index + 1);
     preview.loading = "lazy";
     row.appendChild(preview);
@@ -596,6 +603,7 @@ el.imageInput.addEventListener("change", async () => {
   }
   const revision = state.selectionRevision;
   el.imageInput.disabled = true;
+  setProductBusy(true);
   showNotice(el.productNotice, "Đang tối ưu " + files.length + " ảnh...");
   try {
     for (const file of files) {
@@ -612,6 +620,7 @@ el.imageInput.addEventListener("change", async () => {
     showNotice(el.productNotice, error.message || "Không thể xử lý ảnh. Các ảnh đã tối ưu vẫn được giữ.");
   } finally {
     el.imageInput.disabled = false;
+    setProductBusy(false);
   }
 });
 el.saveDraft.addEventListener("click", () => saveProduct("draft").catch((error) => showNotice(el.productNotice, error.message)));
